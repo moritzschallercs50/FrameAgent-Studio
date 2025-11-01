@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block title %}Storyboard{% endblock %}
+
+{% block content %}
+<div class="page page-5">
+    <div class="page-header">
+        <button class="back-btn" onclick="window.location.href='/script'">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <path d="M12 5L7 10L12 15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+        </button>
+        <h1>Your Storyboard</h1>
+    </div>
+    
+    <div class="storyboard-grid" id="storyboard-grid">
+        <div class="storyboard-card loading">
+            <div class="loading-skeleton" style="height: 200px;"></div>
+        </div>
+        <div class="storyboard-card loading">
+            <div class="loading-skeleton" style="height: 200px;"></div>
+        </div>
+        <div class="storyboard-card loading">
+            <div class="loading-skeleton" style="height: 200px;"></div>
+        </div>
+    </div>
+    
+    <div class="page-footer">
+        <button id="generate-video-btn" class="primary-btn" disabled>
+            Generate Final Video
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <path d="M8 5L13 10L8 15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+        </button>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let storyboardData = [];
+
+window.addEventListener('load', function() {
+    showLoading('Storyboard artist at work...', 'Creating visual frames for each scene');
+    
+    fetch('/api/generate-storyboard', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        hideLoading();
+        
+        if (data.status === 'success') {
+            storyboardData = data.storyboard;
+            renderStoryboard();
+            document.getElementById('generate-video-btn').disabled = false;
+        }
+    })
+    .catch(error => {
+        hideLoading();
+        console.error('Error:', error);
+        alert('An error occurred. Please try again.');
+    });
+});
+
+function renderStoryboard() {
+    const grid = document.getElementById('storyboard-grid');
+    grid.innerHTML = '';
+    
+    storyboardData.forEach(shot => {
+        const card = document.createElement('div');
+        card.className = 'storyboard-card';
+        card.innerHTML = `
+            <div class="storyboard-frame">
+                <div class="frame-placeholder">
+                    <svg width="60" height="60" viewBox="0 0 60 60" fill="none">
+                        <rect x="10" y="10" width="40" height="30" stroke="currentColor" stroke-width="2" rx="2"/>
+                        <circle cx="22" cy="20" r="4" fill="currentColor"/>
+                        <path d="M10 35L20 25L30 32L40 22L50 30V40H10V35Z" fill="currentColor"/>
+                    </svg>
+                </div>
+                <div class="frame-timestamp">${shot.timestamp}</div>
+            </div>
+            <div class="storyboard-details">
+                <div class="shot-number">Scene ${shot.scene_number}</div>
+                <div class="shot-setting">${shot.setting}</div>
+                <div class="shot-description">${shot.visual_description}</div>
+                ${shot.text_on_screen ? `<div class="shot-text">"${shot.text_on_screen}"</div>` : ''}
+            </div>
+        `;
+        grid.appendChild(card);
+    });
+}
+
+document.getElementById('generate-video-btn').addEventListener('click', function() {
+    showLoading('Video Generator at work...', 'Rendering your final video. This may take a few minutes...');
+    
+    fetch('/api/generate-video', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        hideLoading();
+        
+        if (data.status === 'success') {
+            window.location.href = '/video';
+        }
+    })
+    .catch(error => {
+        hideLoading();
+        console.error('Error:', error);
+        alert('An error occurred. Please try again.');
+    });
+});
+</script>
+{% endblock %}
+

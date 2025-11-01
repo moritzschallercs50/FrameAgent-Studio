@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block title %}Brand Strategy{% endblock %}
+
+{% block content %}
+<div class="page page-2">
+    <div class="page-header">
+        <button class="back-btn" onclick="window.location.href='/'">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <path d="M12 5L7 10L12 15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+        </button>
+        <h1>Brand Strategy</h1>
+    </div>
+    
+    <div class="content-grid">
+        <!-- Brand Core -->
+        <div class="card">
+            <h2 class="card-title">Brand Core</h2>
+            <div id="brand-core" class="card-content">
+                <div class="loading-skeleton"></div>
+            </div>
+        </div>
+        
+        <!-- Brand Positioning -->
+        <div class="card">
+            <h2 class="card-title">Brand Positioning</h2>
+            <div id="brand-positioning" class="card-content">
+                <div class="loading-skeleton"></div>
+            </div>
+        </div>
+        
+        <!-- Brand Identity -->
+        <div class="card">
+            <h2 class="card-title">Brand Identity</h2>
+            <div id="brand-identity" class="card-content">
+                <div class="loading-skeleton"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="page-footer">
+        <button id="continue-btn" class="primary-btn" disabled>
+            Generate Video Ideas
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <path d="M8 5L13 10L8 15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+        </button>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+window.addEventListener('load', function() {
+    showLoading('Brand Strategist at work...', 'Analyzing your brand core, positioning, and identity');
+    
+    fetch('/api/brand-strategy', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        hideLoading();
+        
+        if (data.status === 'success') {
+            // Parse the strategy output
+            const lines = data.strategy.split('\n');
+            
+            let brandCore = '';
+            let brandPositioning = '';
+            let brandIdentity = '';
+            
+            let currentSection = '';
+            
+            lines.forEach(line => {
+                line = line.trim();
+                if (line.includes('Brand Core')) {
+                    currentSection = 'core';
+                } else if (line.includes('Brand Positioning')) {
+                    currentSection = 'positioning';
+                } else if (line.includes('Brand Identity')) {
+                    currentSection = 'identity';
+                } else if (line) {
+                    if (currentSection === 'core') {
+                        brandCore += line + '\n';
+                    } else if (currentSection === 'positioning') {
+                        brandPositioning += line + '\n';
+                    } else if (currentSection === 'identity') {
+                        brandIdentity += line + '\n';
+                    }
+                }
+            });
+            
+            document.getElementById('brand-core').innerHTML = formatText(brandCore || data.strategy);
+            document.getElementById('brand-positioning').innerHTML = formatText(brandPositioning || 'Analysis in progress...');
+            document.getElementById('brand-identity').innerHTML = formatText(brandIdentity || 'Analysis in progress...');
+            
+            document.getElementById('continue-btn').disabled = false;
+        }
+    })
+    .catch(error => {
+        hideLoading();
+        console.error('Error:', error);
+        alert('An error occurred. Please try again.');
+    });
+});
+
+document.getElementById('continue-btn').addEventListener('click', function() {
+    showLoading('Creative Director thinking...', 'Brainstorming video concepts for your brand');
+    
+    setTimeout(() => {
+        window.location.href = '/creative-concepts';
+    }, 1500);
+});
+
+function formatText(text) {
+    return text
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\n/g, '<br>')
+        .replace(/(\d+\.)/g, '<br><strong>$1</strong>');
+}
+</script>
+{% endblock %}
+

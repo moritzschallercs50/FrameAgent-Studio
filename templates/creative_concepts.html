@@ -1,0 +1,250 @@
+{% extends "base.html" %}
+
+{% block title %}Creative Concepts{% endblock %}
+
+{% block content %}
+<div class="page page-3">
+    <div class="page-header">
+        <button class="back-btn" onclick="window.location.href='/brand-strategy'">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <path d="M12 5L7 10L12 15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+        </button>
+        <h1>Creative Concepts</h1>
+    </div>
+    
+    <div class="concepts-grid" id="concepts-grid">
+        <!-- Concepts will be loaded here -->
+        <div class="concept-card loading">
+            <div class="loading-skeleton"></div>
+        </div>
+        <div class="concept-card loading">
+            <div class="loading-skeleton"></div>
+        </div>
+        <div class="concept-card loading">
+            <div class="loading-skeleton"></div>
+        </div>
+        <div class="concept-card loading">
+            <div class="loading-skeleton"></div>
+        </div>
+    </div>
+    
+    <div class="page-footer">
+        <button id="regenerate-btn" class="secondary-btn">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <path d="M4 10C4 6.68629 6.68629 4 10 4C13.3137 4 16 6.68629 16 10C16 13.3137 13.3137 16 10 16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                <path d="M10 2V4M10 4L8 2M10 4L12 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            Regenerate
+        </button>
+        <button id="generate-script-btn" class="primary-btn" disabled>
+            Generate Script
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <path d="M8 5L13 10L8 15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+        </button>
+    </div>
+</div>
+
+<!-- Concept Detail Modal -->
+<div id="concept-modal" class="modal hidden">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 id="modal-title">Video Concept</h2>
+            <button class="modal-close" onclick="closeConceptModal()">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                    <path d="M6 6L18 18M6 18L18 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+            </button>
+        </div>
+        <div class="modal-body">
+            <textarea id="concept-content" rows="20"></textarea>
+        </div>
+        <div class="modal-footer">
+            <button class="secondary-btn" onclick="closeConceptModal()">Cancel</button>
+            <button class="primary-btn" onclick="saveConceptEdit()">Save & Select</button>
+        </div>
+    </div>
+</div>
+
+<!-- Feedback Modal -->
+<div id="feedback-modal" class="modal hidden">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>What do you want to change?</h2>
+            <button class="modal-close" onclick="closeFeedbackModal()">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                    <path d="M6 6L18 18M6 18L18 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+            </button>
+        </div>
+        <div class="modal-body">
+            <textarea id="feedback-content" rows="6" placeholder="Describe what you'd like to change..."></textarea>
+        </div>
+        <div class="modal-footer">
+            <button class="secondary-btn" onclick="closeFeedbackModal()">Cancel</button>
+            <button class="primary-btn" onclick="submitFeedback()">Regenerate</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let concepts = [];
+let selectedConceptId = null;
+
+window.addEventListener('load', function() {
+    loadConcepts();
+});
+
+function loadConcepts() {
+    showLoading('Creative Director at work...', 'Generating unique video concepts for your brand');
+    
+    fetch('/api/creative-concepts', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        hideLoading();
+        
+        if (data.status === 'success') {
+            concepts = data.concepts;
+            renderConcepts();
+        }
+    })
+    .catch(error => {
+        hideLoading();
+        console.error('Error:', error);
+        alert('An error occurred. Please try again.');
+    });
+}
+
+function renderConcepts() {
+    const grid = document.getElementById('concepts-grid');
+    grid.innerHTML = '';
+    
+    concepts.forEach(concept => {
+        const card = document.createElement('div');
+        card.className = 'concept-card';
+        card.onclick = () => openConceptModal(concept);
+        
+        // Parse concept content
+        const lines = concept.content.split('\n');
+        let title = `Video ${concept.id}`;
+        let preview = concept.content.substring(0, 200) + '...';
+        
+        lines.forEach(line => {
+            if (line.trim().startsWith('Idea')) {
+                title = line.trim();
+            }
+        });
+        
+        card.innerHTML = `
+            <h3>${title}</h3>
+            <div class="concept-preview">${formatConceptPreview(concept.content)}</div>
+        `;
+        
+        grid.appendChild(card);
+    });
+}
+
+function formatConceptPreview(content) {
+    const lines = content.split('\n');
+    let html = '';
+    let count = 0;
+    
+    for (let line of lines) {
+        if (line.trim() && count < 5) {
+            html += `<p>${line.trim()}</p>`;
+            count++;
+        }
+    }
+    
+    return html;
+}
+
+function openConceptModal(concept) {
+    selectedConceptId = concept.id;
+    document.getElementById('modal-title').textContent = `Video ${concept.id}`;
+    document.getElementById('concept-content').value = concept.content;
+    document.getElementById('concept-modal').classList.remove('hidden');
+}
+
+function closeConceptModal() {
+    document.getElementById('concept-modal').classList.add('hidden');
+}
+
+function saveConceptEdit() {
+    const updatedContent = document.getElementById('concept-content').value;
+    
+    // Update the concept
+    const conceptIndex = concepts.findIndex(c => c.id === selectedConceptId);
+    if (conceptIndex !== -1) {
+        concepts[conceptIndex].content = updatedContent;
+    }
+    
+    // Select this concept
+    fetch('/api/select-concept', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ concept_id: selectedConceptId })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            closeConceptModal();
+            document.getElementById('generate-script-btn').disabled = false;
+        }
+    });
+}
+
+document.getElementById('regenerate-btn').addEventListener('click', function() {
+    document.getElementById('feedback-modal').classList.remove('hidden');
+});
+
+function closeFeedbackModal() {
+    document.getElementById('feedback-modal').classList.add('hidden');
+}
+
+function submitFeedback() {
+    const feedback = document.getElementById('feedback-content').value;
+    closeFeedbackModal();
+    
+    showLoading('Creative Director revising...', 'Creating new concepts based on your feedback');
+    
+    fetch('/api/regenerate-concepts', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ feedback: feedback })
+    })
+    .then(response => response.json())
+    .then(data => {
+        hideLoading();
+        
+        if (data.status === 'success') {
+            concepts = data.concepts;
+            renderConcepts();
+            document.getElementById('feedback-content').value = '';
+        }
+    })
+    .catch(error => {
+        hideLoading();
+        console.error('Error:', error);
+        alert('An error occurred. Please try again.');
+    });
+}
+
+document.getElementById('generate-script-btn').addEventListener('click', function() {
+    window.location.href = '/script';
+});
+</script>
+{% endblock %}
+

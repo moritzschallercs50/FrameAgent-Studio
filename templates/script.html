@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+
+{% block title %}Video Script{% endblock %}
+
+{% block content %}
+<div class="page page-4">
+    <div class="page-header">
+        <button class="back-btn" onclick="window.location.href='/creative-concepts'">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <path d="M12 5L7 10L12 15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+        </button>
+        <h1>Video Script</h1>
+        <button id="edit-btn" class="icon-btn" title="Edit Script">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <path d="M13.5 3.5L16.5 6.5L7 16H4V13L13.5 3.5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+        </button>
+    </div>
+    
+    <div class="script-container" id="script-container">
+        <div class="loading-skeleton" style="height: 400px;"></div>
+    </div>
+    
+    <div class="page-footer">
+        <button id="continue-btn" class="primary-btn" disabled>
+            Generate Storyboard
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <path d="M8 5L13 10L8 15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+        </button>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let scriptData = null;
+let isEditing = false;
+
+window.addEventListener('load', function() {
+    showLoading('Screenwriter at work...', 'Crafting your 30-second video script');
+    
+    fetch('/api/generate-script', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        hideLoading();
+        
+        if (data.status === 'success') {
+            scriptData = data.script;
+            renderScript();
+            document.getElementById('continue-btn').disabled = false;
+        }
+    })
+    .catch(error => {
+        hideLoading();
+        console.error('Error:', error);
+        alert('An error occurred. Please try again.');
+    });
+});
+
+function renderScript() {
+    const container = document.getElementById('script-container');
+    container.innerHTML = '';
+    
+    if (!scriptData || !scriptData.script) {
+        container.innerHTML = '<p>No script available</p>';
+        return;
+    }
+    
+    scriptData.script.forEach(scene => {
+        const sceneEl = document.createElement('div');
+        sceneEl.className = 'script-scene';
+        sceneEl.innerHTML = `
+            <div class="scene-header">
+                <span class="scene-number">Scene ${scene.scene_number}</span>
+                <span class="scene-timestamp">${scene.timestamp_start} - ${scene.timestamp_end}</span>
+            </div>
+            <div class="scene-setting">${scene.setting}</div>
+            <div class="scene-body">
+                <div class="scene-description">
+                    <strong>Visual:</strong>
+                    <p>${scene.visual_description}</p>
+                </div>
+                ${scene.text_on_screen ? `
+                    <div class="scene-text">
+                        <strong>Text on Screen:</strong>
+                        <p>"${scene.text_on_screen}"</p>
+                    </div>
+                ` : ''}
+                <div class="scene-audio">
+                    <strong>Audio:</strong>
+                    <p>${scene.audio_cue}</p>
+                </div>
+            </div>
+        `;
+        container.appendChild(sceneEl);
+    });
+}
+
+document.getElementById('edit-btn').addEventListener('click', function() {
+    if (isEditing) {
+        // Save changes
+        saveScriptChanges();
+        this.innerHTML = `
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <path d="M13.5 3.5L16.5 6.5L7 16H4V13L13.5 3.5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+        `;
+        isEditing = false;
+    } else {
+        // Enable editing
+        enableEditing();
+        this.innerHTML = `
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <path d="M16 4L8 12L4 8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+        `;
+        isEditing = true;
+    }
+});
+
+function enableEditing() {
+    const scenes = document.querySelectorAll('.script-scene');
+    scenes.forEach((sceneEl, index) => {
+        const scene = scriptData.script[index];
+        sceneEl.innerHTML = `
+            <div class="scene-header">
+                <span class="scene-number">Scene ${scene.scene_number}</span>
+                <span class="scene-timestamp">${scene.timestamp_start} - ${scene.timestamp_end}</span>
+            </div>
+            <input type="text" class="edit-input" data-field="setting" data-index="${index}" value="${scene.setting}">
+            <div class="scene-body">
+                <div class="scene-description">
+                    <strong>Visual:</strong>
+                    <textarea class="edit-textarea" data-field="visual_description" data-index="${index}" rows="3">${scene.visual_description}</textarea>
+                </div>
+                <div class="scene-text">
+                    <strong>Text on Screen:</strong>
+                    <input type="text" class="edit-input" data-field="text_on_screen" data-index="${index}" value="${scene.text_on_screen || ''}">
+                </div>
+                <div class="scene-audio">
+                    <strong>Audio:</strong>
+                    <input type="text" class="edit-input" data-field="audio_cue" data-index="${index}" value="${scene.audio_cue}">
+                </div>
+            </div>
+        `;
+    });
+}
+
+function saveScriptChanges() {
+    const inputs = document.querySelectorAll('.edit-input, .edit-textarea');
+    inputs.forEach(input => {
+        const field = input.dataset.field;
+        const index = parseInt(input.dataset.index);
+        scriptData.script[index][field] = input.value;
+    });
+    
+    // Save to backend
+    fetch('/api/update-script', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ script: scriptData })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            renderScript();
+        }
+    });
+}
+
+document.getElementById('continue-btn').addEventListener('click', function() {
+    window.location.href = '/storyboard';
+});
+</script>
+{% endblock %}
+

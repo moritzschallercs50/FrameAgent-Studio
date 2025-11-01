@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}FrameAgent Studio - Start{% endblock %}
+
+{% block content %}
+<div class="page page-1">
+    <div class="center-content">
+        <div class="hero-section">
+            <h1 class="main-title">FrameAgent Studio</h1>
+            <p class="subtitle">AI-Powered Brand Video Generation</p>
+        </div>
+        
+        <div class="url-input-container">
+            <input 
+                type="text" 
+                id="website-url" 
+                class="url-input" 
+                placeholder="Enter your website's URL"
+                autocomplete="url"
+            >
+            <button id="analyze-btn" class="primary-btn">
+                <span>Analyze</span>
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                    <path d="M7 10L10 13L13 10M10 3V13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M3 15L3 16C3 16.5523 3.44772 17 4 17L16 17C16.5523 17 17 16.5523 17 16V15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('analyze-btn').addEventListener('click', function() {
+    const url = document.getElementById('website-url').value.trim();
+    
+    if (!url) {
+        alert('Please enter a website URL');
+        return;
+    }
+    
+    // Show loading
+    showLoading('Analyzing your brand...', 'Our research agent is exploring your website');
+    
+    fetch('/api/analyze-url', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ url: url })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            setTimeout(() => {
+                window.location.href = '/brand-strategy';
+            }, 1500);
+        }
+    })
+    .catch(error => {
+        hideLoading();
+        console.error('Error:', error);
+        alert('An error occurred. Please try again.');
+    });
+});
+
+// Allow Enter key to submit
+document.getElementById('website-url').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        document.getElementById('analyze-btn').click();
+    }
+});
+</script>
+{% endblock %}
+

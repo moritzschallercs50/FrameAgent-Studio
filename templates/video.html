@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}Final Video{% endblock %}
+
+{% block content %}
+<div class="page page-6">
+    <div class="page-header">
+        <button class="back-btn" onclick="window.location.href='/storyboard'">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <path d="M12 5L7 10L12 15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+        </button>
+        <h1>Your Video</h1>
+    </div>
+    
+    <div class="video-player-container">
+        <div class="video-wrapper">
+            <video id="video-player" controls>
+                <source src="/static/sample-video.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+        </div>
+        
+        <div class="video-actions">
+            <button class="secondary-btn">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                    <path d="M10 4V16M4 10H16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+                Download Video
+            </button>
+            <button class="secondary-btn">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                    <path d="M15 8L10 13L5 8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    <circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="2"/>
+                </svg>
+                Share
+            </button>
+            <button class="primary-btn" onclick="window.location.href='/'">
+                Create Another Video
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
