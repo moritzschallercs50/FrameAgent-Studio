@@ -38,7 +38,7 @@ def chat_with_openrouter(prompt: str, image_paths: Optional[List[str]] = None) -
     """
 
     # 1. Get API key from environment variables
-    api_key = os.environ.get("OPENROUTER_API_KEY", "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")
+    api_key =  "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"
     if not api_key:
         raise EnvironmentError("OPENROUTER_API_KEY environment variable not set.")
 

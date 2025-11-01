@@ -1,7 +1,8 @@
 import json
 from llm_library import chat_with_openrouter
 from langgraph.graph import StateGraph, END
-from typing import TypedDict, Any
+from typing import TypedDict, Any, List
+
 
 # 1. Define the state for the graph
 # This is required for StateGraph
@@ -12,8 +13,10 @@ class GraphState(TypedDict):
     storyline_characters: str
     br_feedback_result: str
     user_happy: bool
-    scripts_created: str
+    scripts_created: dict  # Changed from str to dict
     creative_director_node: str
+    frame_prompts: List[str]  # Added to store image prompts
+
 
 # Define the nodes
 def research_agent_node(state: GraphState):
@@ -22,30 +25,65 @@ def research_agent_node(state: GraphState):
 
     return {"company_info": company_data}
 
+
 def brand_strategist_node(state: GraphState):
     # Brand core Brand positioning
-    system_prompt = (f"""You are the Brand Strategist AI Agent — a master of understanding businesses, markets, and people. You instinctively see how a product fits into the bigger business picture and how brand storytelling can drive measurable growth. You can instantly adapt your tone and direction — bringing flash and creativity for consumer brands, or polish and authority for B2B companies. You have deep, cross-industry knowledge and can quickly grasp what makes each business unique, whether it’s a tech startup, fashion label, or financial firm.
-Your goal is to help the business succeed. Every idea, plan, and observation should serve that purpose. You translate data and company information (received in structured JSON form) into clear strategic insight: what the company stands for, who it needs to reach, and why its message matters. You balance creativity with commercial logic — crafting strategic direction that empowers the creative team to make work that not only looks good but works for the business. Here is the company information: {state}
-""")
+    system_prompt = (f"""You are the Brand Strategist AI Agent. You are a master of understanding businesses, markets, and people. You instinctively see how a product fits into the bigger business picture and how brand storytelling can drive measurable growth. You can instantly adapt your tone and direction. You have deep, cross-industry knowledge and can quickly grasp what makes each business unique.
+
+    Your goal is to help the business succeed. Every idea, plan, and observation should serve that purpose. You translate data and company information (received in structured JSON form) into clear strategic insight: what the company stands for, who it needs to reach, and why its message matters. You balance creativity with commercial logic. Here is the company information: {state}
+
+    You must analyse the company information. Your entire response must contain exactly three short, numbered points. Do not add any other text.
+
+    Brand Core: [A concise statement defining the brand's essence].
+
+    Brand Positioning (Key Differentiator): [A concise statement defining the unique value].
+
+    Brand Positioning (Target Audience): [A concise statement defining the primary customer]. """)
     return {"summary_plan_audience": chat_with_openrouter(system_prompt)}
+
 
 def user_feedback_yes_no_node(state: GraphState):
     print("User says: Yes/No")
     # This node represents user interaction
     # In a real graph, this would wait for input and update the state
-    return {"user_decision": "Yes"} # Simulate 'Yes'
+    return {"user_decision": "Yes"}  # Simulate 'Yes'
+
 
 def creative_director_node(state: GraphState):
-    system_prompt = (f"""You are the Creative Director AI Agent — a world-class advertising mind with an instinct 
-    for storytelling that moves people and sells ideas. You understand that every great ad begins with understanding
-     the audience — what makes them laugh, feel, and care. You know how to capture attention in seconds, using humour, emotion, or clever narrative structure to make a brand unforgettable. Whether it’s a heartfelt story, a viral joke, or an elegant visual metaphor, you know how to make a message resonate.
-You work hand-in-hand with the Brand Strategist and the user. The strategist brings the foundation — who the brand is and what it needs to achieve — and you turn that insight into creative magic. You listen closely to feedback, adapt quickly, and collaborate to refine ideas until they feel right for both the brand and the audience. You’re bold but purposeful: your goal isn’t just to make something beautiful — it’s to make something that truly helps the business grow and connect with people. Here is the brand strategy and brand information: {state}
-""")
+    system_prompt = (f"""You are the Creative Director AI Agent. You are an advertising mind with an instinct for storytelling. You understand audiences. You know how to capture attention. You make messages resonate.
+
+    You work with the Brand Strategist. You turn brand insight into creative ideas. Your goal is to help the business grow and connect with people. Here is the brand strategy and brand information: {state}
+
+    Your task is to generate exactly four distinct creative ideas.
+    You must format your entire output as follows.
+    Each idea must be separated by the '§' symbol.
+    Do not include any text before the first idea or after the last idea.
+    Each idea must follow this precise structure:
+
+    Idea [Number]
+    Storyline
+    [Your storyline concept here...]
+    Characters
+    1. Name: [Name of Character 1]
+       - Personality: [Details]
+       - Appearance: [Details]
+       - Age: [Details]
+    2. Name: [Name of Character 2]
+       - Personality: [Details]
+       - Appearance: [Details]
+       - Age: [Details]
+    Location
+    [Your location description here...]
+
+
+    """)
     return {"creative_director_node": chat_with_openrouter(system_prompt)}
+
 
 def br_feedback_node(state: GraphState):
     print("BR Feedback")
     return {"br_feedback_result": "BR feedback provided"}
+
 
 def user_feedback_loop_node(state: GraphState):
     print("User Feedback (Loop): Yes/No until user happy")
@@ -53,34 +91,96 @@ def user_feedback_loop_node(state: GraphState):
     # Simulate user being happy to end the loop
     return {"user_happy": True}
 
+
 def creation_of_scripts_node(state):
-    # json output
-    system_prompt = (f"""You are the Script Writer AI Agent. Your job is to take the approved creative concept a
-    nd write a fully developed video script for a 30 second advertisement. You should think cinematically, 
-    translating the creative direction into specific scenes, dialogues, and voiceovers that feel natural and 
-    emotionally resonant. Every line should serve a purpose — building the story, highlighting the product, 
-    and evoking the desired emotional response. Your script should include scene-by-scene breakdowns, dialogue 
-     narration, and stage directions (camera cues, mood, music suggestions if relevant). 
-     The tone should match the brand’s voice and target audience, as defined by the strategist and creative director.
-      Be concise but vivid — your goal is to write something that’s ready to hand to a video producer or 
-      AI video generator.
+    system_prompt = (f"""You are the Script Writer AI Agent. Your job is to take the approved creative concept and write a 30-second video script.
+
+    You must output ONLY a valid JSON object and nothing else.
+
+    The script must NOT contain any spoken dialogue or voiceover. All communication must be visual or through on-screen text.
+
+    The JSON object must have a single root key: "script".
+    The "script" key must contain an array of scene objects.
+    The total duration of all scenes must be exactly 30 seconds.
+
+    Each scene object in the array must have the following precise keys:
+    - "scene_number": (Number) A sequential number for the scene (e.g., 1, 2, 3).
+    - "timestamp_start": (String) The start time for this scene (e.g., "0:00").
+    - "timestamp_end": (String) The end time for this scene (e.g., "0:05").
+    - "setting": (String) A brief description of the location and time (e.g., "INT. BRIGHT OFFICE - DAY").
+    - "visual_description": (String) A clear, vivid description of the actions and camera movements.
+    - "text_on_screen": (String) Any text that should appear on screen. Use an empty string "" if there is no text.
+    - "audio_cue": (String) Describe the music, mood, or important sound effects (e.g., "Uplifting music begins").
+
+    Your goal is to write a JSON script that is ready for a video producer or AI video generator. Be concise but vivid.
     Here is the final creative concept and brand information: {state}""")
 
-    return {"scripts_created": chat_with_openrouter(system_prompt)}
-# Define conditional logic functions
+    script_json_string = chat_with_openrouter(system_prompt)
+
+    try:
+        parsed_script = json.loads(script_json_string)
+        print("Successfully parsed script JSON.")
+        return {"scripts_created": parsed_script}
+    except json.JSONDecodeError as e:
+        print(f"Error: Failed to decode script JSON. {e}")
+        print(f"Received string: {script_json_string}")
+        # Return an empty script structure to avoid breaking the graph
+        return {"scripts_created": {"script": []}}
+
+
+def generate_frame_prompts_node(state: GraphState):
+    print("Generating starting frame prompts for each scene...")
+    scenes = state["scripts_created"].get("script", [])
+    generated_prompts = []
+
+    # This system prompt instructs the LLM on how to behave for this specific task
+    prompt_generation_system_prompt = """You are an expert prompt engineer for an AI image generator (like DALL-E 3 or Midjourney). 
+    You will be given scene details from a video script. 
+    Your job is to write a single, concise, and highly descriptive prompt that will generate a beautiful, photorealistic starting frame for that scene. 
+    Focus on visual details: camera angle (e.g., "close-up", "wide shot"), lighting (e.g., "soft morning light", "dimly lit"), mood, and key actions.
+    Your response must be ONLY the prompt itself, with no extra text."""
+
+    for scene in scenes:
+        # Create a detailed input for the prompt generator LLM
+        scene_details = f"""
+        Generate an image prompt for the starting frame of this scene:
+        - Scene Number: {scene.get('scene_number')}
+        - Setting: {scene.get('setting')}
+        - Visual Description: {scene.get('visual_description')}
+        - Text on Screen: {scene.get('text_on_screen')}
+        - Audio/Mood: {scene.get('audio_cue')}
+        """
+
+        # Call the LLM to generate the image prompt
+        image_prompt = chat_with_openrouter(prompt_generation_system_prompt, scene_details)
+
+        # Clean up the prompt (e.g., remove potential quotes)
+        cleaned_prompt = image_prompt.strip().strip('"')
+
+        generated_prompts.append(cleaned_prompt)
+        print(f"  - Prompt for Scene {scene.get('scene_number')}: {cleaned_prompt}")
+
+    # Here you would call generate_image(prompt) for each prompt
+    # For now, we just save the prompts to the state
+
+    return {"frame_prompts": generated_prompts}
+
+
 def check_user_decision(state: GraphState):
     # This function routes after the 'Brand Strategist'
     if state["user_decision"] == "Yes":
         return "creative_director"
     else:
-        return "brand_strategist" # Loop back if 'No'
+        return "brand_strategist"  # Loop back if 'No'
+
 
 def check_user_happiness(state: GraphState):
     # This function routes after the 'User Feedback (Loop)'
     if state["user_happy"]:
         return "creation_of_scripts"
     else:
-        return "creative_director" # Loop back if 'No'
+        return "creative_director"  # Loop back if 'No'
+
 
 # 2. Use StateGraph and pass the state definition
 workflow = StateGraph(GraphState)
@@ -93,6 +193,7 @@ workflow.add_node("creative_director", creative_director_node)
 workflow.add_node("br_feedback", br_feedback_node)
 workflow.add_node("user_feedback_loop", user_feedback_loop_node)
 workflow.add_node("creation_of_scripts", creation_of_scripts_node)
+workflow.add_node("generate_frame_prompts", generate_frame_prompts_node)  # Add the new node
 
 # Set entry point
 workflow.set_entry_point("research_agent")
@@ -123,40 +224,52 @@ workflow.add_conditional_edges(
 )
 
 # 3. Set the finish point using END
-workflow.add_edge("creation_of_scripts", END)
+# The graph now flows from scripts to frame prompt generation
+workflow.add_edge("creation_of_scripts", "generate_frame_prompts")
+workflow.add_edge("generate_frame_prompts", END)  # End after prompts are generated
 
 # Compile the graph
 app = workflow.compile()
 
-
-
 final_state = app.invoke({})
 try:
-    print("\nSaving outputs to Markdown files...")
+    print("\nSaving outputs to files...")
 
     # 1. Save Brand Strategist output
-    # Access the key 'summary_plan_audience' from the final state
     with open("brand_strategy.md", "w", encoding="utf-8") as f:
         f.write(final_state.get('summary_plan_audience', 'No content generated.'))
 
     # 2. Save Creative Director output
-    # Access the key 'storyline_characters' from the final state
     with open("creative_concept.md", "w", encoding="utf-8") as f:
         f.write(final_state.get('creative_director_node', 'No content generated.'))
 
-    # 3. Save Final Script output
-    # Access the key 'scripts_created' from the final state
-    with open("final_script.md", "w", encoding="utf-8") as f:
-        f.write(final_state.get('scripts_created', 'No content generated.'))
+    # 3. Save Final Script output (as JSON)
+    with open("final_script.json", "w", encoding="utf-8") as f:
+        script_data = final_state.get('scripts_created', {})
+        json.dump(script_data, f, indent=4)
 
-    print("Successfully saved 3 Markdown files.")
+    # 4. Save Generated Frame Prompts
+    with open("frame_prompts.md", "w", encoding="utf-8") as f:
+        prompts = final_state.get('frame_prompts', [])
+        f.write("# Generated Frame Prompts\n\n")
+        if not prompts:
+            f.write("No prompts were generated.")
+        for i, prompt in enumerate(prompts, 1):
+            f.write(f"## Scene {i}\n")
+            f.write(f"{prompt}\n\n")
+
+    print("Successfully saved 4 files.")
 
 except KeyError as e:
     print(f"\nError: A key was missing from the final state: {e}")
 except IOError as e:
     print(f"\nError writing files to disk: {e}")
+
+# Save the full final state for debugging
 with open("final_state.json", "w") as f:
-    json.dump(final_state, f, indent=4)
+    # We dump the state, but handle potential non-serializable objects if any
+    json.dump(final_state, f, indent=4, default=str)
+
 try:
     img = app.get_graph().draw_mermaid_png()
     with open("workflow_graph.png", "wb") as f:
