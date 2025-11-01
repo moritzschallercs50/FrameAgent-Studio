@@ -16,19 +16,20 @@ class GraphState(TypedDict):
     scripts_created: dict  # Changed from str to dict
     creative_director_node: str
     frame_prompts: List[str]  # Added to store image prompts
-    background_themes: List[dict]  # Added to store background themes and figures
+    # Changed from a List[dict] to a single dict
+    global_themes_and_figures: dict
 
 
-# Define the nodes
+# (All nodes from research_agent_node to creation_of_scripts_node remain the same)
+# ... (brand_strategist_node, user_feedback_yes_no_node, etc.)
+
 def research_agent_node(state: GraphState):
     with open("anthopic.json", "r") as f:
         company_data = json.load(f)
-
     return {"company_info": company_data}
 
 
 def brand_strategist_node(state: GraphState):
-    # Brand core Brand positioning
     system_prompt = (f"""You are the Brand Strategist AI Agent. You are a master of understanding businesses, markets, and people. You instinctively see how a product fits into the bigger business picture and how brand storytelling can drive measurable growth. You can instantly adapt your tone and direction. You have deep, cross-industry knowledge and can quickly grasp what makes each business unique.
 
     Your goal is to help the business succeed. Every idea, plan, and observation should serve that purpose. You translate data and company information (received in structured JSON form) into clear strategic insight: what the company stands for, who it needs to reach, and why its message matters. You balance creativity with commercial logic. Here is the company information: {state}
@@ -36,18 +37,14 @@ def brand_strategist_node(state: GraphState):
     You must analyse the company information. Your entire response must contain exactly three short, numbered points. Do not add any other text.
 
     Brand Core: [A concise statement defining the brand's essence].
-
     Brand Positioning (Key Differentiator): [A concise statement defining the unique value].
-
     Brand Positioning (Target Audience): [A concise statement defining the primary customer]. """)
     return {"summary_plan_audience": chat_with_openrouter(system_prompt)}
 
 
 def user_feedback_yes_no_node(state: GraphState):
     print("User says: Yes/No")
-    # This node represents user interaction
-    # In a real graph, this would wait for input and update the state
-    return {"user_decision": "Yes"}  # Simulate 'Yes'
+    return {"user_decision": "Yes"}
 
 
 def creative_director_node(state: GraphState):
@@ -75,8 +72,6 @@ def creative_director_node(state: GraphState):
        - Age: [Details]
     Location
     [Your location description here...]
-
-
     """)
     return {"creative_director_node": chat_with_openrouter(system_prompt)}
 
@@ -88,8 +83,6 @@ def br_feedback_node(state: GraphState):
 
 def user_feedback_loop_node(state: GraphState):
     print("User Feedback (Loop): Yes/No until user happy")
-    # This node would wait for user input
-    # Simulate user being happy to end the loop
     return {"user_happy": True}
 
 
@@ -97,9 +90,7 @@ def creation_of_scripts_node(state):
     system_prompt = (f"""You are the Script Writer AI Agent. Your job is to take the approved creative concept and write a 30-second video script.
 
     You must output ONLY a valid JSON object and nothing else.
-
     The script must NOT contain any spoken dialogue or voiceover. All communication must be visual or through on-screen text.
-
     The JSON object must have a single root key: "script".
     The "script" key must contain an array of scene objects.
     The total duration of all scenes must be exactly 30 seconds.
@@ -117,7 +108,6 @@ def creation_of_scripts_node(state):
     Here is the final creative concept and brand information: {state}""")
 
     script_json_string = chat_with_openrouter(system_prompt)
-
     try:
         parsed_script = json.loads(script_json_string)
         print("Successfully parsed script JSON.")
@@ -125,75 +115,102 @@ def creation_of_scripts_node(state):
     except json.JSONDecodeError as e:
         print(f"Error: Failed to decode script JSON. {e}")
         print(f"Received string: {script_json_string}")
-        # Return an empty script structure to avoid breaking the graph
         return {"scripts_created": {"script": []}}
 
 
-def generate_background_themes_node(state: GraphState):
-    print("Generating background themes and fitting figures for each scene...")
+# REFACTORED NODE
+def generate_global_themes_node(state: GraphState):
+    print("Generating global themes and figures for the entire script...")
     scenes = state["scripts_created"].get("script", [])
-    generated_themes = []
 
-    theme_generation_system_prompt = """You are an AI assistant specialized in creating background themes and fitting figures for video scenes.
-    You will be given scene details (setting, visual description, mood).
-    Your task is to generate:
-    1. A concise, descriptive background theme prompt suitable for an AI image generator (e.g., "futuristic city skyline at dusk").
-    2. A brief description of any fitting figures or objects that should be present in this background, but not necessarily the main focus (e.g., "silhouetted pedestrians, glowing street lamps").
+    if not scenes:
+        print("No scenes found to process.")
+        return {"global_themes_and_figures": {}}
 
-    Output a JSON object with two keys: "theme_prompt" and "fitting_figures". Do NOT include any other text."""
-    print(f"Total scenes to process: {len(scenes)}")
-    print(scenes)
-    for scene in scenes:
-        scene_details = f"""
-        Generate a background theme and fitting figures for this scene:
-        - Scene Number: {scene.get('scene_number')}
-        - Setting: {scene.get('setting')}
-        - Visual Description: {scene.get('visual_description')}
-        - Audio/Mood: {scene.get('audio_cue')}
-        """
-        theme_generation_system_prompt += " " + scene_details
-        theme_json_string = chat_with_openrouter(theme_generation_system_prompt)
-        try:
-            parsed_theme = json.loads(theme_json_string)
-            generated_themes.append(parsed_theme)
-            print(f"  - Theme for Scene {scene.get('scene_number')}: {parsed_theme.get('theme_prompt')}")
-        except json.JSONDecodeError as e:
-            print(f"Error: Failed to decode theme JSON for scene {scene.get('scene_number')}. {e}")
-            print(f"Received string: {theme_json_string}")
-            generated_themes.append({"theme_prompt": "generic background", "fitting_figures": ""})
+    # This prompt now asks for a SINGLE object, not a list
+    theme_generation_system_prompt = """You are an AI assistant specialized in analyzing a full video script.
+    You will be given a JSON array of ALL scene objects for a video.
 
-    return {"background_themes": generated_themes}
+    Your task is to analyze all scenes and extract two global elements:
+    1.  **Global Theme:** A single, concise string describing the overarching visual theme, style, or journey of the *entire* video (e.g., "A visual journey from a dark, cluttered indoor space to a bright, vibrant outdoor world").
+    2.  **Global Figures:** A single, consolidated string describing *all unique figures* (characters, people, animals) that appear anywhere in the script. List each unique figure only once. (e.g., "A young, tired person; a small brown dog").
+
+    You must output ONLY a single, valid JSON object with these two keys: "global_theme" and "global_figures".
+    Do not add any text before or after the JSON object. Do not output a list."""
+
+    all_scenes_json_string = json.dumps(scenes, indent=2)
+
+    print("Analyzing all scenes in a single batch...")
+    themes_json_string = chat_with_openrouter(
+        theme_generation_system_prompt,
+        all_scenes_json_string
+    )
+
+    generated_data = {}
+    try:
+        # We now expect a single dictionary object
+        parsed_data = json.loads(themes_json_string)
+
+        if not isinstance(parsed_data, dict):
+            raise json.JSONDecodeError("Expected a JSON object, not a list.", themes_json_string, 0)
+
+        generated_data = parsed_data
+        print("Successfully parsed global themes and figures:")
+        print(f"  - Global Theme: {generated_data.get('global_theme')}")
+        print(f"  - Global Figures: {generated_data.get('global_figures')}")
+
+    except json.JSONDecodeError as e:
+        print(f"Error: Failed to decode global themes JSON object. {e}")
+        print(f"Received string: {themes_json_string}")
+        # Provide a fallback *object*
+        generated_data = {"global_theme": "generic theme", "global_figures": "generic figure"}
+        print("Using fallback data.")
+
+    return {"global_themes_and_figures": generated_data}
 
 
+# REFACTORED NODE
 def generate_frame_prompts_node(state: GraphState):
     print("Generating starting frame prompts for each scene...")
     scenes = state["scripts_created"].get("script", [])
-    background_themes = state.get("background_themes", [])
+    # Get the single global themes dictionary
+    global_data = state.get("global_themes_and_figures", {})
+    global_theme = global_data.get("global_theme", "")
+    global_figures = global_data.get("global_figures", "")
+
     generated_prompts = []
 
-    # This system prompt instructs the LLM on how to behave for this specific task
+    # This prompt is updated to accept global context
     prompt_generation_system_prompt = """You are an expert prompt engineer for an AI image generator (like DALL-E 3 or Midjourney). 
-    You will be given scene details from a video script, along with a suggested background theme and fitting figures.
-    Your job is to write a single, concise, and highly descriptive prompt that will generate a beautiful, photorealistic starting frame for that scene. 
-    Integrate the background theme and fitting figures smoothly into the main prompt.
-    Focus on visual details: camera angle (e.g., "close-up", "wide shot"), lighting (e.g., "soft morning light", "dimly lit"), mood, and key actions.
+    You will be given:
+    1.  Details for one **specific scene** (setting, visual description).
+    2.  The **global, overarching theme** for the entire video.
+    3.  The **global list of all figures** appearing in the video.
+
+    Your job is to write a single, concise, and highly descriptive prompt to generate a photorealistic starting frame for *that specific scene*.
+    -   Your prompt must be *specific* to the scene's details (setting, action).
+    -   It must also *incorporate* the global theme (e.g., if the theme is 'dark and moody', the prompt should reflect that).
+    -   It should only include figures if they are *mentioned* in the specific scene's description, drawing from the global figure list for consistency.
+
     Your response must be ONLY the prompt itself, with no extra text."""
 
-    for i, scene in enumerate(scenes):
-        # Get the corresponding background theme and figures, if available
-        theme_data = background_themes[i] if i < len(background_themes) else {}
-        background_theme = theme_data.get("theme_prompt", "")
-        fitting_figures = theme_data.get("fitting_figures", "")
-
+    for scene in scenes:
+        # Create a detailed input for the prompt generator LLM
         scene_details = f"""
-        Generate an image prompt for the starting frame of this scene, incorporating the background theme and fitting figures:
+        Generate an image prompt for this specific scene:
+
+        **Specific Scene Details:**
         - Scene Number: {scene.get('scene_number')}
         - Setting: {scene.get('setting')}
         - Visual Description: {scene.get('visual_description')}
         - Text on Screen: {scene.get('text_on_screen')}
         - Audio/Mood: {scene.get('audio_cue')}
-        - Suggested Background Theme: {background_theme}
-        - Fitting Figures/Objects for Background: {fitting_figures}
+
+        **Global Video Context (for consistency):**
+        - Overarching Theme: {global_theme}
+        - Global Figures List: {global_figures} 
+
+        Remember: Create a prompt for the *specific scene*, colored by the *global theme*. Only include figures from the global list if they are *in this scene's visual description*.
         """
 
         # Call the LLM to generate the image prompt
@@ -205,26 +222,21 @@ def generate_frame_prompts_node(state: GraphState):
         generated_prompts.append(cleaned_prompt)
         print(f"  - Prompt for Scene {scene.get('scene_number')}: {cleaned_prompt}")
 
-    # Here you would call generate_image(prompt) for each prompt
-    # For now, we just save the prompts to the state
-
     return {"frame_prompts": generated_prompts}
 
 
 def check_user_decision(state: GraphState):
-    # This function routes after the 'Brand Strategist'
     if state["user_decision"] == "Yes":
         return "creative_director"
     else:
-        return "brand_strategist"  # Loop back if 'No'
+        return "brand_strategist"
 
 
 def check_user_happiness(state: GraphState):
-    # This function routes after the 'User Feedback (Loop)'
     if state["user_happy"]:
         return "creation_of_scripts"
     else:
-        return "creative_director"  # Loop back if 'No'
+        return "creative_director"
 
 
 # 2. Use StateGraph and pass the state definition
@@ -238,8 +250,9 @@ workflow.add_node("creative_director", creative_director_node)
 workflow.add_node("br_feedback", br_feedback_node)
 workflow.add_node("user_feedback_loop", user_feedback_loop_node)
 workflow.add_node("creation_of_scripts", creation_of_scripts_node)
-workflow.add_node("generate_background_themes", generate_background_themes_node)  # New node
-workflow.add_node("generate_frame_prompts", generate_frame_prompts_node)  # Modified node
+# Use the new node name
+workflow.add_node("generate_global_themes", generate_global_themes_node)
+workflow.add_node("generate_frame_prompts", generate_frame_prompts_node)
 
 # Set entry point
 workflow.set_entry_point("research_agent")
@@ -254,25 +267,18 @@ workflow.add_edge("br_feedback", "user_feedback_loop")
 workflow.add_conditional_edges(
     "user_feedback_yes_no",
     check_user_decision,
-    {
-        "creative_director": "creative_director",
-        "brand_strategist": "brand_strategist",
-    }
+    {"creative_director": "creative_director", "brand_strategist": "brand_strategist"}
 )
-
 workflow.add_conditional_edges(
     "user_feedback_loop",
     check_user_happiness,
-    {
-        "creation_of_scripts": "creation_of_scripts",
-        "creative_director": "creative_director",
-    }
+    {"creation_of_scripts": "creation_of_scripts", "creative_director": "creative_director"}
 )
 
 # 3. Set the finish point using END
-# The graph now flows from scripts -> background themes -> frame prompt generation
-workflow.add_edge("creation_of_scripts", "generate_background_themes")
-workflow.add_edge("generate_background_themes", "generate_frame_prompts")
+# Update graph flow
+workflow.add_edge("creation_of_scripts", "generate_global_themes")
+workflow.add_edge("generate_global_themes", "generate_frame_prompts")
 workflow.add_edge("generate_frame_prompts", END)  # End after prompts are generated
 
 # Compile the graph
@@ -295,21 +301,22 @@ try:
         script_data = final_state.get('scripts_created', {})
         json.dump(script_data, f, indent=4)
 
-    # 4. Save Generated Background Themes
-    with open("background_themes.md", "w", encoding="utf-8") as f:
-        themes = final_state.get('background_themes', [])
-        f.write("# Generated Background Themes and Fitting Figures\n\n")
+    # 4. Save Generated Global Themes & Figures (REFACTORED)
+    with open("global_themes_and_figures.md", "w", encoding="utf-8") as f:
+        # Get the single dictionary
+        themes = final_state.get('global_themes_and_figures', {})
+        f.write("# Generated Global Themes and Figures\n\n")
         if not themes:
-            f.write("No background themes were generated.")
-        for i, theme_data in enumerate(themes, 1):
-            f.write(f"## Scene {i}\n")
-            f.write(f"**Theme Prompt:** {theme_data.get('theme_prompt', 'N/A')}\n")
-            f.write(f"**Fitting Figures:** {theme_data.get('fitting_figures', 'N/A')}\n\n")
+            f.write("No global themes or figures were generated.")
+        else:
+            # Write the keys directly, no loop
+            f.write(f"**Global Theme:** {themes.get('global_theme', 'N/A')}\n\n")
+            f.write(f"**Global Figures:** {themes.get('global_figures', 'N/A')}\n")
 
     # 5. Save Generated Frame Prompts
     with open("frame_prompts.md", "w", encoding="utf-8") as f:
         prompts = final_state.get('frame_prompts', [])
-        f.write("# Generated Frame Prompts (Combined with Backgrounds)\n\n")
+        f.write("# Generated Frame Prompts (Combined with Globals)\n\n")
         if not prompts:
             f.write("No prompts were generated.")
         for i, prompt in enumerate(prompts, 1):
@@ -323,10 +330,7 @@ except KeyError as e:
 except IOError as e:
     print(f"\nError writing files to disk: {e}")
 
-# Save the full final state for debugging
-with open("final_state.json", "w") as f:
-    # We dump the state, but handle potential non-serializable objects if any
-    json.dump(final_state, f, indent=4, default=str)
+
 
 try:
     img = app.get_graph().draw_mermaid_png()

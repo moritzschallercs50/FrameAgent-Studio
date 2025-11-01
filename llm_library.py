@@ -25,7 +25,7 @@ def _encode_image_to_base64(image_path: str) -> str:
         raise
 
 
-def chat_with_openrouter(prompt: str, image_paths: Optional[List[str]] = None) -> str:
+def chat_with_openrouter(prompt: str, extra_prompt=None, image_paths: Optional[List[str]] = None) -> str:
     """
     Sends a text prompt and optional images to x-ai/grok-4-fast via OpenRouter.
 
@@ -36,6 +36,8 @@ def chat_with_openrouter(prompt: str, image_paths: Optional[List[str]] = None) -
     Returns:
         The text response from the model.
     """
+    if extra_prompt:
+        prompt += " " + extra_prompt
 
     # 1. Get API key from environment variables
     api_key =  "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"
@@ -91,6 +93,72 @@ def chat_with_openrouter(prompt: str, image_paths: Optional[List[str]] = None) -
         print(f"An error occurred: {e}")
         return "Error: Could not get a response."
 
+def generate_image_with_style(prompt: str, style: str = "TSB Advert") -> Optional[bytes]:
+    """
+    Generates an image based on a prompt and style using google/gemini-2.5-flash-image.
+
+    Args:
+        prompt: The text prompt to guide the image generation.
+        style: The style to apply to the image generation. Defaults to "TSB Advert".
+
+    Returns:
+        The generated image as bytes, or None if the generation fails.
+    """
+    # Combine the prompt and style
+    full_prompt = f"{prompt} in the style of {style}"
+
+    # 1. Get API key from environment variables
+    api_key = "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"
+    if not api_key:
+        raise EnvironmentError("OPENROUTER_API_KEY environment variable not set.")
+
+    # 2. Initialize the client to point to OpenRouter
+    client = OpenAI(
+        base_url="https://openrouter.ai/api/v1",
+        api_key=api_key,
+    )
+
+    # 3. Build the request payload
+    messages = [
+        {
+            "role": "user",
+            "content": [{"type": "text", "text": full_prompt}],
+        }
+    ]
+
+    print("Sending image generation request to google/gemini-2.5-flash-image...")
+    # 4. Send the request
+    completion = client.chat.completions.create(
+        model="google/gemini-2.5-flash-image",
+        messages=messages,
+        max_tokens=0,  # No text response expected
+    )
+
+    # 5. Extract the image content from the response
+    image_data = completion.choices[0].message.content
+    print(completion)
+    if image_data:
+        # Decode the base64 image data
+        return base64.b64decode(image_data)
+    else:
+        print("No image data returned.")
+        return None
+
+
+
+
+# Example usage
+if __name__ == "__main__":
+    prompt = "A futuristic cityscape at sunset"
+    style = "Cyberpunk Art"
+    image = generate_image_with_style(prompt, style)
+
+    if image:
+        with open("generated_image.png", "wb") as f:
+            f.write(image)
+        print("Image successfully generated and saved as 'generated_image.png'.")
+    else:
+        print("Image generation failed.")
 
 # --- HOW TO USE THE FUNCTION ---
 if __name__ == "__main__":
