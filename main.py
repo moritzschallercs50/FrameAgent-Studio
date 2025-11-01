@@ -16,6 +16,7 @@ class GraphState(TypedDict):
     scripts_created: dict  # Changed from str to dict
     creative_director_node: str
     frame_prompts: List[str]  # Added to store image prompts
+    background_themes: List[dict]  # Added to store background themes and figures
 
 
 # Define the nodes
@@ -128,27 +129,71 @@ def creation_of_scripts_node(state):
         return {"scripts_created": {"script": []}}
 
 
+def generate_background_themes_node(state: GraphState):
+    print("Generating background themes and fitting figures for each scene...")
+    scenes = state["scripts_created"].get("script", [])
+    generated_themes = []
+
+    theme_generation_system_prompt = """You are an AI assistant specialized in creating background themes and fitting figures for video scenes.
+    You will be given scene details (setting, visual description, mood).
+    Your task is to generate:
+    1. A concise, descriptive background theme prompt suitable for an AI image generator (e.g., "futuristic city skyline at dusk").
+    2. A brief description of any fitting figures or objects that should be present in this background, but not necessarily the main focus (e.g., "silhouetted pedestrians, glowing street lamps").
+
+    Output a JSON object with two keys: "theme_prompt" and "fitting_figures". Do NOT include any other text."""
+    print(f"Total scenes to process: {len(scenes)}")
+    print(scenes)
+    for scene in scenes:
+        scene_details = f"""
+        Generate a background theme and fitting figures for this scene:
+        - Scene Number: {scene.get('scene_number')}
+        - Setting: {scene.get('setting')}
+        - Visual Description: {scene.get('visual_description')}
+        - Audio/Mood: {scene.get('audio_cue')}
+        """
+        theme_generation_system_prompt += " " + scene_details
+        theme_json_string = chat_with_openrouter(theme_generation_system_prompt)
+        try:
+            parsed_theme = json.loads(theme_json_string)
+            generated_themes.append(parsed_theme)
+            print(f"  - Theme for Scene {scene.get('scene_number')}: {parsed_theme.get('theme_prompt')}")
+        except json.JSONDecodeError as e:
+            print(f"Error: Failed to decode theme JSON for scene {scene.get('scene_number')}. {e}")
+            print(f"Received string: {theme_json_string}")
+            generated_themes.append({"theme_prompt": "generic background", "fitting_figures": ""})
+
+    return {"background_themes": generated_themes}
+
+
 def generate_frame_prompts_node(state: GraphState):
     print("Generating starting frame prompts for each scene...")
     scenes = state["scripts_created"].get("script", [])
+    background_themes = state.get("background_themes", [])
     generated_prompts = []
 
     # This system prompt instructs the LLM on how to behave for this specific task
     prompt_generation_system_prompt = """You are an expert prompt engineer for an AI image generator (like DALL-E 3 or Midjourney). 
-    You will be given scene details from a video script. 
+    You will be given scene details from a video script, along with a suggested background theme and fitting figures.
     Your job is to write a single, concise, and highly descriptive prompt that will generate a beautiful, photorealistic starting frame for that scene. 
+    Integrate the background theme and fitting figures smoothly into the main prompt.
     Focus on visual details: camera angle (e.g., "close-up", "wide shot"), lighting (e.g., "soft morning light", "dimly lit"), mood, and key actions.
     Your response must be ONLY the prompt itself, with no extra text."""
 
-    for scene in scenes:
-        # Create a detailed input for the prompt generator LLM
+    for i, scene in enumerate(scenes):
+        # Get the corresponding background theme and figures, if available
+        theme_data = background_themes[i] if i < len(background_themes) else {}
+        background_theme = theme_data.get("theme_prompt", "")
+        fitting_figures = theme_data.get("fitting_figures", "")
+
         scene_details = f"""
-        Generate an image prompt for the starting frame of this scene:
+        Generate an image prompt for the starting frame of this scene, incorporating the background theme and fitting figures:
         - Scene Number: {scene.get('scene_number')}
         - Setting: {scene.get('setting')}
         - Visual Description: {scene.get('visual_description')}
         - Text on Screen: {scene.get('text_on_screen')}
         - Audio/Mood: {scene.get('audio_cue')}
+        - Suggested Background Theme: {background_theme}
+        - Fitting Figures/Objects for Background: {fitting_figures}
         """
 
         # Call the LLM to generate the image prompt
@@ -193,7 +238,8 @@ workflow.add_node("creative_director", creative_director_node)
 workflow.add_node("br_feedback", br_feedback_node)
 workflow.add_node("user_feedback_loop", user_feedback_loop_node)
 workflow.add_node("creation_of_scripts", creation_of_scripts_node)
-workflow.add_node("generate_frame_prompts", generate_frame_prompts_node)  # Add the new node
+workflow.add_node("generate_background_themes", generate_background_themes_node)  # New node
+workflow.add_node("generate_frame_prompts", generate_frame_prompts_node)  # Modified node
 
 # Set entry point
 workflow.set_entry_point("research_agent")
@@ -224,8 +270,9 @@ workflow.add_conditional_edges(
 )
 
 # 3. Set the finish point using END
-# The graph now flows from scripts to frame prompt generation
-workflow.add_edge("creation_of_scripts", "generate_frame_prompts")
+# The graph now flows from scripts -> background themes -> frame prompt generation
+workflow.add_edge("creation_of_scripts", "generate_background_themes")
+workflow.add_edge("generate_background_themes", "generate_frame_prompts")
 workflow.add_edge("generate_frame_prompts", END)  # End after prompts are generated
 
 # Compile the graph
@@ -248,17 +295,28 @@ try:
         script_data = final_state.get('scripts_created', {})
         json.dump(script_data, f, indent=4)
 
-    # 4. Save Generated Frame Prompts
+    # 4. Save Generated Background Themes
+    with open("background_themes.md", "w", encoding="utf-8") as f:
+        themes = final_state.get('background_themes', [])
+        f.write("# Generated Background Themes and Fitting Figures\n\n")
+        if not themes:
+            f.write("No background themes were generated.")
+        for i, theme_data in enumerate(themes, 1):
+            f.write(f"## Scene {i}\n")
+            f.write(f"**Theme Prompt:** {theme_data.get('theme_prompt', 'N/A')}\n")
+            f.write(f"**Fitting Figures:** {theme_data.get('fitting_figures', 'N/A')}\n\n")
+
+    # 5. Save Generated Frame Prompts
     with open("frame_prompts.md", "w", encoding="utf-8") as f:
         prompts = final_state.get('frame_prompts', [])
-        f.write("# Generated Frame Prompts\n\n")
+        f.write("# Generated Frame Prompts (Combined with Backgrounds)\n\n")
         if not prompts:
             f.write("No prompts were generated.")
         for i, prompt in enumerate(prompts, 1):
             f.write(f"## Scene {i}\n")
             f.write(f"{prompt}\n\n")
 
-    print("Successfully saved 4 files.")
+    print("Successfully saved 5 files.")
 
 except KeyError as e:
     print(f"\nError: A key was missing from the final state: {e}")

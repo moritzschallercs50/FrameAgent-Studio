@@ -255,75 +255,14 @@
         "isNsfw": false,
         "urn": "urn:brandfetch:brand:idmJWF3N06"
     },
-    "summary_plan_audience": "1. **Brand Core**: Pioneering safe, ethical AI systems that prioritize reliability, interpretability, and steerability to shape a responsible future.\n\n2. **Brand Positioning (Key Differentiator)**: Unrivaled focus on AI safety through frameworks like Constitutional AI, delivering advanced models like Claude 3.5 Sonnet for secure, efficient innovation.\n\n3. **Brand Positioning (Target Audience)**: Developers, businesses, and organizations integrating AI responsibly, seeking ethical tools to drive growth without compromising safety.",
+    "summary_plan_audience": "Error: Could not get a response.",
     "user_decision": "Yes",
     "br_feedback_result": "BR feedback provided",
     "user_happy": true,
     "scripts_created": {
-        "script": [
-            {
-                "scene_number": 1,
-                "timestamp_start": "0:00",
-                "timestamp_end": "0:05",
-                "setting": "INT. OPEN-PLAN CO-WORKING SPACE - DAY",
-                "visual_description": "Wide shot of bustling San Francisco co-working space with graffiti walls and glowing screens. Camera pans to Alex Rivera, 28, messy hair in hoodie and glasses, typing frantically on laptop, looking anxious.",
-                "text_on_screen": "",
-                "audio_cue": "Tense, upbeat electronic music fades in, subtle keyboard clacks."
-            },
-            {
-                "scene_number": 2,
-                "timestamp_start": "0:05",
-                "timestamp_end": "0:10",
-                "setting": "INT. OPEN-PLAN CO-WORKING SPACE - DAY",
-                "visual_description": "Close-up on Alex's screen showing biased AI outputs causing errors. She sighs, rubs temples. Cut to Jordan Lee, 35, button-up shirt, approaching with a reassuring smile, gesturing to Anthropic API docs.",
-                "text_on_screen": "",
-                "audio_cue": "Music builds tension, soft notification ping."
-            },
-            {
-                "scene_number": 3,
-                "timestamp_start": "0:10",
-                "timestamp_end": "0:15",
-                "setting": "INT. OPEN-PLAN CO-WORKING SPACE - DAY",
-                "visual_description": "Over-the-shoulder shot: Alex integrates Claude 3.5 Sonnet API. Screen shows Constitutional AI principles guiding ethical outputs. Jordan points approvingly as green checkmarks appear.",
-                "text_on_screen": "Claude 3.5 Sonnet API",
-                "audio_cue": "Music shifts to hopeful tone, satisfying integration sound."
-            },
-            {
-                "scene_number": 4,
-                "timestamp_start": "0:15",
-                "timestamp_end": "0:20",
-                "setting": "INT. OPEN-PLAN CO-WORKING SPACE - DAY",
-                "visual_description": "Montage: App launches on multiple devices. Users interact positively, smiles appear. Alex and Jordan high-five, relief on their faces. Camera zooms out to show collaborative space thriving.",
-                "text_on_screen": "",
-                "audio_cue": "Uplifting music swells, celebratory chimes."
-            },
-            {
-                "scene_number": 5,
-                "timestamp_start": "0:20",
-                "timestamp_end": "0:25",
-                "setting": "INT. OPEN-PLAN CO-WORKING SPACE - DAY",
-                "visual_description": "Slow-motion shot of diverse users engaging with the app safely. Fade to Anthropic logo emerging from digital code streams.",
-                "text_on_screen": "Safe AI for Responsible Innovation",
-                "audio_cue": "Music peaks with inspiring crescendo."
-            },
-            {
-                "scene_number": 6,
-                "timestamp_start": "0:25",
-                "timestamp_end": "0:30",
-                "setting": "EXT. SAN FRANCISCO SKYLINE - DAY",
-                "visual_description": "Aerial drone shot over San Francisco's Mission District, transitioning to global map with connected nodes representing safe AI impact. End with company URL and social links.",
-                "text_on_screen": "anthropic.com\n@AnthropicAI",
-                "audio_cue": "Music fades out with optimistic resolve."
-            }
-        ]
+        "script": []
     },
-    "creative_director_node": "Idea 1\nStoryline\nIn a high-stakes tech startup race, a young developer is under pressure to launch an AI-powered app quickly, but fears unintended biases could harm users. She integrates Claude 3.5 Sonnet via the API, guided by Constitutional AI principles, which steers the system toward ethical outputs. As the app goes live, it not only succeeds but builds trust with users, showcasing how Anthropic's safe AI turns innovation into responsible impact.\nCharacters\n1. Name: Alex Rivera\n   - Personality: Ambitious yet cautious, driven by a passion for ethical tech but anxious about cutting corners.\n   - Appearance: Casual coder vibe with messy hair, wearing a hoodie and glasses, always with a laptop backpack.\n   - Age: 28\n2. Name: Jordan Lee\n   - Personality: Supportive mentor, optimistic and knowledgeable, emphasizing long-term value over short-term wins.\n   - Appearance: Professional yet approachable, in a button-up shirt, with neatly styled hair and a friendly smile.\n   - Age: 35\nLocation\nA bustling open-plan co-working space in San Francisco's Mission District, filled with vibrant graffiti walls, collaborative desks, and glowing screens reflecting the city's innovative energy.\n\u00a7\nIdea 2\nStoryline\nA corporate executive at a growing fintech firm struggles with AI tools that amplify risks in financial predictions. Turning to Anthropic's Claude API, she applies steerable AI frameworks to make decisions interpretable and safe, transforming potential pitfalls into secure opportunities that boost revenue and customer confidence, proving AI can be a steadfast ally in business evolution.\nCharacters\n1. Name: Sofia Chen\n   - Personality: Strategic and decisive, with a strong moral compass, frustrated by unreliable tech but excited by solutions.\n   - Appearance: Polished business attire, sharp bob haircut, carrying a sleek tablet and exuding quiet authority.\n   - Age: 42\n2. Name: Dr. Elias Grant\n   - Personality: Innovative researcher, collaborative and insightful, bridging tech and ethics with enthusiasm.\n   - Appearance: Thoughtful with wire-rimmed glasses, casual blazer over a graphic tee featuring AI motifs, salt-and-pepper hair.\n   - Age: 50\nLocation\nA sleek, modern boardroom in a San Francisco high-rise overlooking the bay, with floor-to-ceiling windows, holographic data displays, and minimalist decor emphasizing clarity and forward-thinking.\n\u00a7\nIdea 3\nStoryline\nA policy advisor in a non-profit organization grapples with the ethical dilemmas of deploying AI for social good, like climate modeling. By leveraging Anthropic's interpretable AI systems, including Constitutional AI, she uncovers hidden biases and refines models for harmless, reliable insights. The result? A groundbreaking report that influences global policy, highlighting how safe AI empowers meaningful change.\nCharacters\n1. Name: Maya Patel\n   - Personality: Idealistic and analytical, deeply committed to justice, persistent in questioning AI's societal role.\n   - Appearance: Practical with braided hair, wearing earth-toned clothing and a necklace symbolizing advocacy, notebook in hand.\n   - Age: 32\n2. Name: Theo Morales\n   - Personality: Empathetic collaborator, witty and reassuring, focused on human-centered AI applications.\n   - Appearance: Warm and approachable, in a vest over a shirt, with a trimmed beard and a subtle tattoo of a circuit pattern.\n   - Age: 38\nLocation\nA cozy research library in San Francisco's Presidio, surrounded by fog-shrouded trees, lined with books on AI ethics and furnished with communal tables under soft, natural light.\n\u00a7\nIdea 4\nStoryline\nAn entrepreneur building an educational platform worries about AI tutors misleading students. She adopts Claude 3.5 Sonnet's steerable features, ensuring responses are reliable and aligned with educational standards. As the platform launches, it engages learners worldwide safely, illustrating Anthropic's role in fostering trustworthy AI that educates and inspires the next generation.\nCharacters\n1. Name: Liam Novak\n   - Personality: Visionary and hands-on, optimistic about tech's potential but vigilant against misuse.\n   - Appearance: Energetic with tousled hair, in jeans and a startup tee, often sketching ideas on a whiteboard.\n   - Age: 26\n2. Name: Nora Kim\n   - Personality: Nurturing educator, detail-oriented and encouraging, passionate about accessible learning.\n   - Appearance: Graceful with glasses and a ponytail, dressed in comfortable layers, holding educational props.\n   - Age: 40\nLocation\nA vibrant classroom-turned-lab in a San Francisco community center, with interactive whiteboards, diverse student artwork on walls, and windows opening to urban views blending nature and city life.",
-    "frame_prompts": [
-        "A photorealistic wide shot of a serene mountain lake at dawn, soft golden morning light filtering through mist-shrouded pines, calm reflective waters mirroring snow-capped peaks, a lone wooden dock extending into the foreground with gentle ripples lapping at its edges, evoking a peaceful and introspective mood, high detail, cinematic composition.",
-        "Photorealistic wide shot of a serene forest clearing at twilight, soft golden hour light filtering through ancient trees casting long shadows, a young woman in flowing dress standing gracefully with arms outstretched, peaceful and mystical mood, intricate details on foliage and mist in the air, high-resolution cinematic style.",
-        "Photorealistic wide shot of a serene mountain lake at dawn, misty fog rolling over crystal-clear water reflecting snow-capped peaks, soft golden morning light filtering through pine trees, tranquil and majestic mood, a lone wooden dock extending into the scene, highly detailed, cinematic composition.",
-        "A wide shot of a serene mountain lake at dawn, with soft golden morning light filtering through mist-shrouded pines, calm reflective water surface mirroring snow-capped peaks, a lone wooden rowboat gently bobbing in the foreground, evoking a peaceful and introspective mood, photorealistic, high detail, cinematic composition.",
-        "Photorealistic wide shot of a serene forest clearing at dawn, soft golden morning light filtering through misty trees, a young woman in flowing white dress standing gracefully with arms outstretched, evoking a mood of peaceful awakening and ethereal beauty, high detail on dew-kissed leaves and subtle fog, cinematic composition.",
-        "Wide shot of a serene ancient library at dusk, golden hour light streaming through tall arched windows, casting long shadows over dusty wooden shelves lined with leather-bound books, a lone scholar in Victorian attire sitting at a ornate desk with an open tome, quill in hand, warm ambient glow from a flickering candle, photorealistic, atmospheric and mysterious mood."
-    ]
+    "creative_director_node": "Error: Could not get a response.",
+    "frame_prompts": [],
+    "background_themes": []
 }
