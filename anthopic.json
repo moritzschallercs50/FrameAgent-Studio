@@ -1,0 +1,256 @@
+{
+    "id": "idmJWF3N06",
+    "name": "Anthropic",
+    "domain": "anthropic.com",
+    "claimed": false,
+    "description": "Anthropic is an AI safety and research company based in San Francisco. Our interdisciplinary team has experience across ML, physics, policy, and product.",
+    "longDescription": "Anthropic is an AI safety and research company headquartered in San Francisco, dedicated to developing reliable, interpretable, and steerable AI systems. With a diverse team experienced in machine learning, physics, policy, and product development, Anthropic prioritizes safety in AI technology. They have introduced Claude 3.5 Sonnet, their most advanced AI model, designed to enhance efficiency and create new revenue opportunities for businesses. Anthropic offers the Claude API, enabling developers to integrate their cutting-edge AI solutions seamlessly into applications. The company focuses on research initiatives that promote AI safety, exploring various frameworks, including Constitutional AI, which emphasizes harmlessness through AI feedback. Committed to advancing the understanding and implementation of AI safety protocols, Anthropic actively engages in discussions surrounding AI's ethical implications and best practices. With a forward-thinking approach, Anthropic aims to empower organizations to leverage AI technology responsibly and effectively, ensuring that safety remains at the forefront of AI advancements.",
+    "links": [
+        {
+            "name": "youtube",
+            "url": "https://youtube.com/@anthropic-ai"
+        },
+        {
+            "name": "twitter",
+            "url": "https://twitter.com/AnthropicAI"
+        },
+        {
+            "name": "linkedin",
+            "url": "https://linkedin.com/company/anthropicresearch"
+        },
+        {
+            "name": "instagram",
+            "url": "https://instagram.com/anthropicai"
+        }
+    ],
+    "logos": [
+        {
+            "theme": "light",
+            "formats": [
+                {
+                    "src": "https://cdn.brandfetch.io/idmJWF3N06/theme/light/logo.svg?c=1bxidDr5KDIDGr0mWUjar",
+                    "background": "transparent",
+                    "format": "svg",
+                    "height": null,
+                    "width": null,
+                    "size": 3726
+                },
+                {
+                    "src": "https://cdn.brandfetch.io/idmJWF3N06/w/800/h/90/theme/light/logo.png?c=1bxidDr5KDIDGr0mWUjar",
+                    "background": "transparent",
+                    "format": "png",
+                    "height": 90,
+                    "width": 800,
+                    "size": 13115
+                },
+                {
+                    "src": "https://cdn.brandfetch.io/idmJWF3N06/w/800/h/90/theme/light/logo.webp?c=1bxidDr5KDIDGr0mWUjar",
+                    "background": "transparent",
+                    "format": "webp",
+                    "height": 90,
+                    "width": 800,
+                    "size": 5972
+                }
+            ],
+            "tags": [],
+            "type": "logo"
+        },
+        {
+            "theme": "dark",
+            "formats": [
+                {
+                    "src": "https://cdn.brandfetch.io/idmJWF3N06/theme/dark/logo.svg?c=1bxidDr5KDIDGr0mWUjar",
+                    "background": "transparent",
+                    "format": "svg",
+                    "height": null,
+                    "width": null,
+                    "size": 3726
+                },
+                {
+                    "src": "https://cdn.brandfetch.io/idmJWF3N06/w/800/h/90/theme/dark/logo.png?c=1bxidDr5KDIDGr0mWUjar",
+                    "background": "transparent",
+                    "format": "png",
+                    "height": 90,
+                    "width": 800,
+                    "size": 14682
+                },
+                {
+                    "src": "https://cdn.brandfetch.io/idmJWF3N06/w/800/h/90/theme/dark/logo.webp?c=1bxidDr5KDIDGr0mWUjar",
+                    "background": "transparent",
+                    "format": "webp",
+                    "height": 90,
+                    "width": 800,
+                    "size": 6810
+                }
+            ],
+            "tags": [],
+            "type": "logo"
+        },
+        {
+            "theme": "light",
+            "formats": [
+                {
+                    "src": "https://cdn.brandfetch.io/idmJWF3N06/theme/light/symbol.svg?c=1bxidDr5KDIDGr0mWUjar",
+                    "background": "transparent",
+                    "format": "svg",
+                    "height": null,
+                    "width": null,
+                    "size": 714
+                },
+                {
+                    "src": "https://cdn.brandfetch.io/idmJWF3N06/w/800/h/564/theme/light/symbol.png?c=1bxidDr5KDIDGr0mWUjar",
+                    "background": "transparent",
+                    "format": "png",
+                    "height": 564,
+                    "width": 800,
+                    "size": 39319
+                },
+                {
+                    "src": "https://cdn.brandfetch.io/idmJWF3N06/w/800/h/564/theme/light/symbol.webp?c=1bxidDr5KDIDGr0mWUjar",
+                    "background": "transparent",
+                    "format": "webp",
+                    "height": 564,
+                    "width": 800,
+                    "size": 18326
+                }
+            ],
+            "tags": [],
+            "type": "symbol"
+        },
+        {
+            "theme": "dark",
+            "formats": [
+                {
+                    "src": "https://cdn.brandfetch.io/idmJWF3N06/theme/dark/symbol.svg?c=1bxidDr5KDIDGr0mWUjar",
+                    "background": "transparent",
+                    "format": "svg",
+                    "height": null,
+                    "width": null,
+                    "size": 714
+                },
+                {
+                    "src": "https://cdn.brandfetch.io/idmJWF3N06/w/800/h/564/theme/dark/symbol.png?c=1bxidDr5KDIDGr0mWUjar",
+                    "background": "transparent",
+                    "format": "png",
+                    "height": 564,
+                    "width": 800,
+                    "size": 52869
+                },
+                {
+                    "src": "https://cdn.brandfetch.io/idmJWF3N06/w/800/h/564/theme/dark/symbol.webp?c=1bxidDr5KDIDGr0mWUjar",
+                    "background": "transparent",
+                    "format": "webp",
+                    "height": 564,
+                    "width": 800,
+                    "size": 20674
+                }
+            ],
+            "tags": [],
+            "type": "symbol"
+        },
+        {
+            "theme": "dark",
+            "formats": [
+                {
+                    "src": "https://cdn.brandfetch.io/idmJWF3N06/w/400/h/400/theme/dark/icon.jpeg?c=1bxidDr5KDIDGr0mWUjar",
+                    "background": null,
+                    "format": "jpeg",
+                    "height": 400,
+                    "width": 400,
+                    "size": 6889
+                }
+            ],
+            "tags": [],
+            "type": "icon"
+        }
+    ],
+    "colors": [
+        {
+            "hex": "#CC785C",
+            "type": "accent",
+            "brightness": 136
+        },
+        {
+            "hex": "#141413",
+            "type": "dark",
+            "brightness": 20
+        },
+        {
+            "hex": "#828179",
+            "type": "brand",
+            "brightness": 129
+        },
+        {
+            "hex": "#F0EFEA",
+            "type": "brand",
+            "brightness": 239
+        },
+        {
+            "hex": "#FFFFFF",
+            "type": "light",
+            "brightness": 255
+        }
+    ],
+    "fonts": [
+        {
+            "name": "Styrene A",
+            "type": "title",
+            "origin": "custom",
+            "originId": null,
+            "weights": []
+        },
+        {
+            "name": "Styrene A",
+            "type": "body",
+            "origin": "custom",
+            "originId": null,
+            "weights": []
+        }
+    ],
+    "images": [
+        {
+            "formats": [
+                {
+                    "src": "https://cdn.brandfetch.io/idmJWF3N06/w/1500/h/500/theme/dark/idF9XignOg.jpeg?c=1bxidDr5KDIDGr0mWUjar",
+                    "background": null,
+                    "format": "jpeg",
+                    "height": 500,
+                    "width": 1500,
+                    "size": 21042
+                }
+            ],
+            "tags": [],
+            "type": "banner"
+        }
+    ],
+    "qualityScore": 0.9228651922547596,
+    "company": {
+        "employees": 51,
+        "financialIdentifiers": {
+            "isin": [],
+            "ticker": []
+        },
+        "foundedYear": null,
+        "industries": [
+            {
+                "score": 1,
+                "id": "152",
+                "name": "Science and Education",
+                "emoji": "🧪",
+                "parent": null,
+                "slug": "science-and-education"
+            }
+        ],
+        "kind": "PRIVATELY_HELD",
+        "location": {
+            "city": "",
+            "country": null,
+            "countryCode": null,
+            "region": null,
+            "state": "",
+            "subregion": null
+        }
+    },
+    "isNsfw": false,
+    "urn": "urn:brandfetch:brand:idmJWF3N06"
+}
