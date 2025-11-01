@@ -135,14 +135,21 @@ def generate_image_with_style(prompt: str, style: str = "TSB Advert") -> Optiona
     )
 
     # 5. Extract the image content from the response
-    image_data = completion.choices[0].message.content
-    print(completion)
-    if image_data:
-        # Decode the base64 image data
-        return base64.b64decode(image_data)
-    else:
-        print("No image data returned.")
-        return None
+    message = completion.choices[0].message
+    print(message)
+
+    # The 'message' object has a 'content' attribute which is a LIST
+    # We want the first item in that list
+    content_part = message.content[0]
+
+    print(content_part)
+
+
+
+    # Now you can decode it
+    import base64
+    return base64.b64decode(content_part)
+
 
 
 
