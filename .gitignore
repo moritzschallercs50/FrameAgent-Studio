@@ -46,7 +46,4 @@ Thumbs.db
 # Logs
 *.log
 
-# Generated files
-generated_image.png
-*.mp4
 
