@@ -224,6 +224,7 @@ def generate_frame_prompts_node(state: GraphState):
 
         **Specific Scene Details:**
         - Scene Number: {scene.get('scene_number')}
+        - Time Range: {scene.get('timestamp_start')} to {scene.get('timestamp_end')}
         - Setting: {scene.get('setting')}
         - Visual Description: {scene.get('visual_description')}
         - Text on Screen: {scene.get('text_on_screen')}

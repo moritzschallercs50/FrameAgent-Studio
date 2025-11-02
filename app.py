@@ -4,6 +4,8 @@ import os
 import re
 import requests
 from urllib.parse import urlparse
+from uuid import uuid4
+from llm_library import generate_image_with_style
 from main import (
     research_agent_node,
     brand_strategist_node,
@@ -34,8 +36,35 @@ def _normalize_domain(url: str) -> str:
         return ''
 
 
+def _get_brandfetch_api_key():
+    key = os.getenv('BRANDFETCH_API_KEY')
+    if key:
+        return key
+    # Try local files
+    for fname in ['.brandfetch_key', 'brandfetch_api_key.txt', 'brandfetch.key']:
+        if os.path.exists(fname):
+            try:
+                with open(fname, 'r', encoding='utf-8') as f:
+                    content = f.read().strip()
+                    if content:
+                        return content
+            except Exception:
+                pass
+    # Fallback: parse research test.py Authorization header if present
+    try:
+        if os.path.exists('research test.py'):
+            with open('research test.py', 'r', encoding='utf-8') as f:
+                text = f.read()
+            m = re.search(r'"Authorization"\s*:\s*"Bearer\s+([^"]+)"', text)
+            if m:
+                return m.group(1)
+    except Exception:
+        pass
+    return None
+
+
 def _fetch_brand_from_brandfetch(domain: str):
-    api_key = os.getenv('BRANDFETCH_API_KEY') or os.getenv('BRANDFETCH_API_KEY')
+    api_key = _get_brandfetch_api_key()
     if not api_key or not domain:
         return None
     try:
@@ -52,7 +81,7 @@ def _fetch_brand_from_brandfetch(domain: str):
 
 
 def _fetch_brand_via_transaction(url: str, country_code: str = None):
-    api_key = os.getenv('BRANDFETCH_API_KEY')
+    api_key = _get_brandfetch_api_key()
     if not api_key or not url:
         return None
     payload = {
@@ -192,6 +221,8 @@ def analyze_url():
     state['company_info'] = company_info
 
     # Store in session
+    if 'session_id' not in session:
+        session['session_id'] = uuid4().hex
     session['workflow_state'] = state
 
     return jsonify({'status': 'success', 'company_info': state['company_info'], 'domain': domain})
@@ -370,7 +401,34 @@ def generate_storyboard():
     prompts = state['frame_prompts']
 
     storyboard = []
+    # Prepare output directory for generated images
+    session_id = session.get('session_id') or uuid4().hex
+    session['session_id'] = session_id
+    base_dir = os.path.join('static', 'generated', 'storyboards', session_id)
+    os.makedirs(base_dir, exist_ok=True)
+
     for i, scene in enumerate(scenes):
+        image_url = ''
+        prompt_text = prompts[i] if i < len(prompts) else ''
+        # Try to generate an image and save it
+        try:
+            if prompt_text:
+                img_bytes = generate_image_with_style(prompt_text, style="Photorealistic")
+                if img_bytes:
+                    # Build deterministic, readable filename using scene number and timestamps
+                    ts_start = str(scene.get('timestamp_start', '') or '').replace(':', '-').replace(' ', '')
+                    ts_end = str(scene.get('timestamp_end', '') or '').replace(':', '-').replace(' ', '')
+                    parts = ["scene", str(scene.get('scene_number') or i + 1)]
+                    if ts_start or ts_end:
+                        parts += [ts_start or 'start', ts_end or 'end']
+                    filename = "_".join(parts) + ".png"
+                    filepath = os.path.join(base_dir, filename)
+                    with open(filepath, 'wb') as f:
+                        f.write(img_bytes)
+                    image_url = f"/static/generated/storyboards/{session_id}/{filename}"
+        except Exception:
+            image_url = ''
+
         storyboard.append({
             'scene_number': scene.get('scene_number'),
             'timestamp': f"{scene.get('timestamp_start')} - {scene.get('timestamp_end')}",
@@ -378,7 +436,8 @@ def generate_storyboard():
             'visual_description': scene.get('visual_description'),
             'text_on_screen': scene.get('text_on_screen'),
             'audio_cue': scene.get('audio_cue'),
-            'image_prompt': prompts[i] if i < len(prompts) else ''
+            'image_prompt': prompt_text,
+            'image_url': image_url
         })
 
     return jsonify({

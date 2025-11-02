@@ -30,6 +30,16 @@ const loadingSteps = [
   'Video generator producing the final cut…',
 ];
 
+// Demo fallback images for hackathon (place files at /static/demo/storyboard/1.jpg ... 6.jpg)
+const DEMO_STORYBOARD_IMAGES = [
+  '/static/demo/storyboard/1.jpg',
+  '/static/demo/storyboard/2.jpg',
+  '/static/demo/storyboard/3.jpg',
+  '/static/demo/storyboard/4.jpg',
+  '/static/demo/storyboard/5.jpg',
+  '/static/demo/storyboard/6.jpg',
+];
+
 let currentPage = 0;
 let selectedIdeaIndex = 0;
 
@@ -73,15 +83,34 @@ function decodeHtmlEntities(str) {
   return el.value;
 }
 
-function getNested(obj, pathArray) {
-  return pathArray.reduce((acc, key) => (acc && acc[key] != null ? acc[key] : undefined), obj);
-}
-
 function pickBrandName(info, fallbackDomain) {
   const clean = (s) => decodeHtmlEntities(String(s || '').trim());
   // 1) Prefer API-provided name if looks like a brand
-  const apiName = clean(info?.name || getNested(info, ['brand', 'name']) || (Array.isArray(info?.brands) ? info.brands[0]?.name : ''));
-  if (apiName && !/^home\b/i.test(apiName)) return apiName;
+  let apiName = clean(info?.name || '');
+  if (apiName) {
+    // If apiName looks like a composite title, split and choose likely brand part
+    const separators = ['|', '—', '-', '–', '·', '\\'];
+    for (const sep of separators) {
+      if (apiName.includes(sep)) {
+        const parts = apiName.split(sep).map(p => p.trim()).filter(Boolean);
+        const candidates = parts.filter(p => !/^home$/i.test(p) && !/^welcome$/i.test(p));
+        // Prefer parts with 2+ words or containing the domain root
+        const domainRoot = String(fallbackDomain || '').replace(/^www\./, '').split('.')[0];
+        const scored = candidates.map(p => ({
+          p,
+          score: (p.split(/\s+/).length >= 2 ? 2 : 0) + (domainRoot && p.toLowerCase().includes(domainRoot.toLowerCase()) ? 3 : 0) + (/^[A-Z]/.test(p) ? 1 : 0)
+        }));
+        scored.sort((a, b) => b.score - a.score);
+        if (scored.length && scored[0].score > 0) {
+          apiName = scored[0].p;
+        } else if (candidates.length) {
+          apiName = candidates[candidates.length - 1];
+        }
+        break;
+      }
+    }
+    if (apiName && !/^home\b/i.test(apiName)) return apiName;
+  }
 
   // 2) Try page title parts (common formats: "Tagline | Brand", "Brand — Home")
   const title = clean(info?.pageTitle || '');
@@ -95,10 +124,14 @@ function pickBrandName(info, fallbackDomain) {
       }
     }
     // Heuristic: prefer the longest part that is not "Home"/"Welcome" and has capitalized words
-    const candidates = parts
-      .filter(p => !/^home$/i.test(p) && !/^welcome$/i.test(p))
-      .sort((a, b) => b.length - a.length);
-    if (candidates.length) return candidates[0];
+    const domainRoot = String(fallbackDomain || '').replace(/^www\./, '').split('.')[0];
+    const candidates = parts.filter(p => !/^home$/i.test(p) && !/^welcome$/i.test(p));
+    const scored = candidates.map(p => ({
+      p,
+      score: (p.split(/\s+/).length >= 2 ? 2 : 0) + (domainRoot && p.toLowerCase().includes(domainRoot.toLowerCase()) ? 3 : 0) + (/^[A-Z]/.test(p) ? 1 : 0)
+    }));
+    scored.sort((a, b) => b.score - a.score);
+    if (scored.length) return scored[0].p;
   }
 
   // 3) Fallback to domain root word
@@ -116,11 +149,7 @@ function extractPalette(info) {
       if (!out.includes(withHash)) out.push(withHash);
     }
   };
-  let colors = [];
-  if (Array.isArray(info?.colors)) colors = info.colors;
-  else if (Array.isArray(getNested(info, ['brand', 'colors']))) colors = getNested(info, ['brand', 'colors']);
-  else if (Array.isArray(getNested(info, ['brands']))) colors = getNested(info, ['brands'])[0]?.colors || [];
-  else if (Array.isArray(getNested(info, ['palette', 'colors']))) colors = getNested(info, ['palette', 'colors']);
+  const colors = Array.isArray(info?.colors) ? info.colors : [];
   colors.forEach(c => {
     if (c && typeof c === 'object') {
       pushHex(c.hex || c.value || c.color);
@@ -132,11 +161,7 @@ function extractPalette(info) {
 }
 
 function pickLogoUrl(info) {
-  let logos = [];
-  if (Array.isArray(info?.logos)) logos = info.logos;
-  else if (Array.isArray(getNested(info, ['brand', 'logos']))) logos = getNested(info, ['brand', 'logos']);
-  else if (Array.isArray(getNested(info, ['brands']))) logos = getNested(info, ['brands'])[0]?.logos || [];
-  else if (Array.isArray(getNested(info, ['assets', 'logos']))) logos = getNested(info, ['assets', 'logos']);
+  const logos = Array.isArray(info?.logos) ? info.logos : [];
   // Prefer type=logo, theme=light, png/webp, else svg
   const scored = [];
   logos.forEach(item => {
@@ -464,9 +489,11 @@ function renderStoryboardFromState() {
     const time = scene.timestamp || `Scene ${scene.scene_number}`;
     const description = scene.visual_description || scene.image_prompt || '';
     const prompt = scene.image_prompt || '';
+    const demoSrc = DEMO_STORYBOARD_IMAGES[idx] || '';
+    const imageSrc = scene.image_url || demoSrc || 'https://images.unsplash.com/photo-1523475472560-d2df97ec485c?auto=format&fit=crop&w=1400&q=80';
     card.innerHTML = `
       <figure class="shot-media">
-        <img src="https://images.unsplash.com/photo-1523475472560-d2df97ec485c?auto=format&fit=crop&w=1400&q=80" alt="Storyboard shot ${time}" loading="lazy" />
+        <img src="${imageSrc}" alt="Storyboard shot ${time}" loading="lazy" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1523475472560-d2df97ec485c?auto=format&fit=crop&w=1400&q=80';" />
       </figure>
       <div class="shot-info">
         <span class="shot-time">${time}</span>

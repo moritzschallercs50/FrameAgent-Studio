@@ -58,6 +58,14 @@ body {
   letter-spacing: 0.02em;
 }
 
+.brand-mark .brand-short { display: none; }
+.brand-mark .brand-full { display: inline; }
+
+@media (max-width: 560px) {
+  .brand-mark .brand-full { display: none; }
+  .brand-mark .brand-short { display: inline; }
+}
+
 .progress-indicator {
   display: flex;
   gap: 8px;
