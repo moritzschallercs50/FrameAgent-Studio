@@ -4,55 +4,55 @@
             "scene_number": 1,
             "timestamp_start": "0:00",
             "timestamp_end": "0:05",
-            "setting": "INT. SAN FRANCISCO CO-WORKING SPACE - DUSK",
-            "visual_description": "Wide shot of a young developer, Alex (28, glasses, messy hair, laptop bag), hunched over a desk cluttered with screens showing frantic code for a healthcare app. She rubs her temples in frustration, ethical dilemma icons (privacy locks, bias warnings) flickering red on her monitor. Camera slowly zooms in on her worried face.",
+            "setting": "INT. CROWDED CO-WORKING SPACE - DAY",
+            "visual_description": "Wide shot of Mia Chen, 28, in hoodie and ponytail, typing furiously on her laptop amid buzzing desks and city views. Screen shows error pop-ups and buggy code. Camera zooms in on her frustrated expression as coffee spills nearby.",
             "text_on_screen": "",
-            "audio_cue": "Tense, pulsating electronic music builds uncertainty."
+            "audio_cue": "Tense, pulsing electronic music builds urgency with keyboard clacks and error beeps."
         },
         {
             "scene_number": 2,
             "timestamp_start": "0:05",
             "timestamp_end": "0:10",
-            "setting": "INT. SAN FRANCISCO CO-WORKING SPACE - DUSK",
-            "visual_description": "Alex scrolls on her tablet, eyes lighting up as she discovers Anthropic's website. Screen splits to show Claude API integration demo: abstract AI nodes connecting safely. She types eagerly, green checkmarks appear replacing red warnings. Camera pans across the city skyline through windows, symbolizing hope.",
-            "text_on_screen": "Discover Claude API",
-            "audio_cue": "Music shifts to uplifting synth tones, subtle whoosh for discovery."
+            "setting": "INT. CROWDED CO-WORKING SPACE - DAY",
+            "visual_description": "Close-up on laptop screen: unreliable AI outputs flash\u2014red warnings of potential harms like data leaks. Mia rubs her temples, scrolls through generic AI interfaces. Cut to over-shoulder shot as she deletes code in exasperation.",
+            "text_on_screen": "",
+            "audio_cue": "Rising tension in music, with discordant synth tones and frustrated sigh SFX."
         },
         {
             "scene_number": 3,
             "timestamp_start": "0:10",
             "timestamp_end": "0:15",
-            "setting": "INT. SAN FRANCISCO CO-WORKING SPACE - DUSK",
-            "visual_description": "Close-up on laptop screen: Claude's Constitutional AI framework visualizes\u2014flowcharts of ethical checks, bias elimination waves sweeping through data. Alex smiles, adjusting glasses. Cut to animated simulation of unbiased disease diagnosis, diverse patient avatars nodding approvingly.",
-            "text_on_screen": "Constitutional AI: Safe & Interpretable",
-            "audio_cue": "Inspiring melody rises, soft digital chimes for ethical validations."
+            "setting": "INT. CROWDED CO-WORKING SPACE - DAY",
+            "visual_description": "Medium shot: Dr. Elias Grant, 52, in button-down with Anthropic pin, approaches Mia with tablet. He points to screen showing Claude API integration. Quick cuts: Mia's eyes widen in curiosity; they gesture excitedly over holographic code previews.",
+            "text_on_screen": "Discover Safe AI with Claude",
+            "audio_cue": "Music shifts to hopeful melody, subtle whoosh for interface transitions."
         },
         {
             "scene_number": 4,
             "timestamp_start": "0:15",
             "timestamp_end": "0:20",
-            "setting": "INT. SAN FRANCISCO CO-WORKING SPACE - DUSK",
-            "visual_description": "Montage: Alex collaborates with mentor Dr. Elena (45, lab coat, warm smile) via video call on screen. They high-five virtually. App launches successfully\u2014holographic patient data streams securely, lives 'saved' icons pulse. Camera pulls back to show collaborative whiteboard with AI flowcharts.",
-            "text_on_screen": "Building Trusted AI Solutions",
-            "audio_cue": "Optimistic crescendo in music, celebratory ping sounds."
+            "setting": "INT. CROWDED CO-WORKING SPACE - DAY",
+            "visual_description": "Dynamic montage: Fingers typing rapidly; clean, green-checkmarked code appears on screen with explanatory annotations. Camera circles as Mia smiles, testing app simulation\u2014virtual users interact safely without errors.",
+            "text_on_screen": "Interpretable. Steerable. Harmless.",
+            "audio_cue": "Uplifting strings swell, with positive confirmation chimes."
         },
         {
             "scene_number": 5,
             "timestamp_start": "0:20",
             "timestamp_end": "0:25",
-            "setting": "EXT. SAN FRANCISCO SKYLINE - NIGHT",
-            "visual_description": "Aerial drone shot over the city lights, transitioning to abstract visuals of interconnected AI networks growing ethically, symbols of safety (shields, balanced scales) integrating seamlessly. Fades to Anthropic logo emerging from the network.",
-            "text_on_screen": "Anthropic: Pioneering Safe AI",
-            "audio_cue": "Music swells to empowering finale, ambient city hum."
+            "setting": "INT. CROWDED CO-WORKING SPACE - DAY",
+            "visual_description": "Triumphant wide shot: Mia high-fives Elias; app launches successfully on her phone, showing ethical safeguards. Team cheers faintly in background. Pan to window overlooking San Francisco bay, symbolizing clarity.",
+            "text_on_screen": "Anthropic: Pioneering AI Safety",
+            "audio_cue": "Music peaks with inspiring crescendo, applause SFX fades in."
         },
         {
             "scene_number": 6,
             "timestamp_start": "0:25",
             "timestamp_end": "0:30",
-            "setting": "INT. BLACK SCREEN - NIGHT",
-            "visual_description": "Logo centers with subtle glow. Links to website, YouTube, Twitter fade in below. Final frame holds on tagline with brand colors.",
-            "text_on_screen": "anthropic.com\nExplore Claude Today",
-            "audio_cue": "Music fades out gently, resonant chord resolves."
+            "setting": "INT. CROWDED CO-WORKING SPACE - DAY",
+            "visual_description": "Fade to logo reveal: Anthropic symbol emerges from flowing code lines. Slow zoom out to include links: anthropic.com, Claude API. End with serene bay view.",
+            "text_on_screen": "Build Responsibly with Claude API\nanthropic.com",
+            "audio_cue": "Music resolves to calm, empowering fade-out."
         }
     ]
 }

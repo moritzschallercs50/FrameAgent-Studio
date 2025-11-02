@@ -1,6 +1,9 @@
 from flask import Flask, render_template, request, jsonify, session
 import json
 import os
+import re
+import requests
+from urllib.parse import urlparse
 from main import (
     research_agent_node,
     brand_strategist_node,
@@ -20,6 +23,121 @@ app.config['PERMANENT_SESSION_LIFETIME'] = 1800  # 30 minutes
 workflow_state = {}
 
 
+def _normalize_domain(url: str) -> str:
+    try:
+        parsed = urlparse(url if re.match(r'^https?://', url) else f'https://{url}')
+        host = parsed.netloc.lower()
+        if host.startswith('www.'):
+            host = host[4:]
+        return host
+    except Exception:
+        return ''
+
+
+def _fetch_brand_from_brandfetch(domain: str):
+    api_key = os.getenv('BRANDFETCH_API_KEY') or os.getenv('BRANDFETCH_API_KEY')
+    if not api_key or not domain:
+        return None
+    try:
+        resp = requests.get(
+            f'https://api.brandfetch.io/v2/brands/{domain}',
+            headers={'Authorization': f'Bearer {api_key}'},
+            timeout=12,
+        )
+        if resp.ok:
+            return resp.json()
+    except Exception:
+        pass
+    return None
+
+
+def _fetch_brand_via_transaction(url: str, country_code: str = None):
+    api_key = os.getenv('BRANDFETCH_API_KEY')
+    if not api_key or not url:
+        return None
+    payload = {
+        "transactionLabel": url,
+    }
+    if country_code:
+        payload["countryCode"] = country_code
+    try:
+        resp = requests.post(
+            'https://api.brandfetch.io/v2/brands/transaction',
+            json=payload,
+            headers={'Authorization': f'Bearer {api_key}', 'Content-Type': 'application/json'},
+            timeout=15,
+        )
+        if resp.ok:
+            return resp.json()
+    except Exception:
+        pass
+    return None
+
+
+def _scrape_basic_brand_info(url: str, domain: str):
+    info = {
+        'id': domain,
+        'name': domain.split('.')[0].capitalize() if domain else 'Brand',
+        'domain': domain,
+        'description': '',
+        'longDescription': '',
+        'pageTitle': '',
+        'metaDescription': '',
+        'links': [],
+        'logos': [],
+        'colors': [],
+        'fonts': [],
+        'images': [],
+        'qualityScore': 0.0,
+        'company': {},
+        'isNsfw': False,
+        'urn': f'urn:brand:{domain}'
+    }
+    if not url:
+        return info
+    try:
+        target = url if re.match(r'^https?://', url) else f'https://{url}'
+        resp = requests.get(target, timeout=10, headers={'User-Agent': 'Mozilla/5.0'})
+        if not resp.ok:
+            return info
+        html = resp.text or ''
+        title_match = re.search(r'<title>(.*?)</title>', html, re.IGNORECASE | re.DOTALL)
+        meta_match = re.search(r'<meta[^>]*name=["\"]description["\"][^>]*content=["\"]([^"\"]+)["\"][^>]*>', html, re.IGNORECASE)
+        title = (title_match.group(1).strip() if title_match else '')
+        description = (meta_match.group(1).strip() if meta_match else '')
+        info['pageTitle'] = title
+        info['metaDescription'] = description
+        if title:
+            info['name'] = title.split('|')[0].split('—')[0].strip()
+        if description:
+            info['description'] = description
+            info['longDescription'] = description
+        return info
+    except Exception:
+        return info
+
+
+def _load_local_brand(domain: str):
+    # Try domain-based JSON file for quick demos; fallback to anthopic.json
+    try:
+        if domain and os.path.exists(f'{domain}.json'):
+            with open(f'{domain}.json', 'r', encoding='utf-8') as f:
+                try:
+                    return json.load(f)
+                except json.JSONDecodeError:
+                    # Some demo files may be Python dicts -> try eval safely
+                    import ast
+                    f.seek(0)
+                    return ast.literal_eval(f.read())
+    except Exception:
+        pass
+    try:
+        with open('anthopic.json', 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
+
 @app.route('/')
 def index():
     """Landing page with URL input"""
@@ -30,10 +148,13 @@ def index():
 def analyze_url():
     """Process the URL and start the workflow"""
     data = request.json
-    url = data.get('url')
-    
+    url = (data or {}).get('url') or ''
+    domain = _normalize_domain(url)
+
     # Initialize state
     state = {
+        'submitted_url': url,
+        'domain': domain,
         'company_info': '',
         'summary_plan_audience': '',
         'user_decision': '',
@@ -45,31 +166,51 @@ def analyze_url():
         'frame_prompts': [],
         'global_themes_and_figures': {}
     }
-    
-    # Run research agent
-    result = research_agent_node(state)
-    state.update(result)
-    
+
+    # Prefer Brandfetch API if available; else scrape; else local fallback
+    # 1) Try Brandfetch transaction (more robust for full URLs)
+    company_info = _fetch_brand_via_transaction(url, os.getenv('BRANDFETCH_COUNTRY') or None)
+    # 2) Fallback to simple Brandfetch by domain
+    if not company_info:
+        company_info = _fetch_brand_from_brandfetch(domain)
+    if not company_info:
+        company_info = _scrape_basic_brand_info(url, domain)
+    if not company_info:
+        company_info = _load_local_brand(domain)
+
+    # Always try to enrich with page meta
+    try:
+        meta = _scrape_basic_brand_info(url, domain)
+        if isinstance(company_info, dict) and isinstance(meta, dict):
+            if not company_info.get('pageTitle') and meta.get('pageTitle'):
+                company_info['pageTitle'] = meta.get('pageTitle')
+            if not company_info.get('metaDescription') and meta.get('metaDescription'):
+                company_info['metaDescription'] = meta.get('metaDescription')
+    except Exception:
+        pass
+
+    state['company_info'] = company_info
+
     # Store in session
     session['workflow_state'] = state
-    
-    return jsonify({'status': 'success', 'company_info': state['company_info']})
+
+    return jsonify({'status': 'success', 'company_info': state['company_info'], 'domain': domain})
 
 
 @app.route('/api/brand-strategy', methods=['POST'])
 def generate_brand_strategy():
     """Generate brand strategy"""
     state = session.get('workflow_state', {})
-    
+
     # Run brand strategist
     result = brand_strategist_node(state)
     state.update(result)
-    
+
     # Parse the brand strategy output
     strategy_text = state['summary_plan_audience']
-    
+
     session['workflow_state'] = state
-    
+
     return jsonify({
         'status': 'success',
         'strategy': strategy_text,
@@ -81,15 +222,15 @@ def generate_brand_strategy():
 def generate_creative_concepts():
     """Generate 4 creative video ideas"""
     state = session.get('workflow_state', {})
-    
+
     # Run creative director
     result = creative_director_node(state)
     state.update(result)
-    
+
     # Parse the creative concepts (separated by §)
     concepts_text = state['creative_director_node']
     concepts = concepts_text.split('§')
-    
+
     # Clean and structure the concepts
     structured_concepts = []
     for i, concept in enumerate(concepts):
@@ -98,9 +239,15 @@ def generate_creative_concepts():
                 'id': i + 1,
                 'content': concept.strip()
             })
-    
+
+    # Persist concepts for later selection
+    state['structured_concepts'] = structured_concepts
+    # Clear any previous selection upon regeneration
+    state['selected_concept_id'] = None
+    state['selected_concept'] = None
+
     session['workflow_state'] = state
-    
+
     return jsonify({
         'status': 'success',
         'concepts': structured_concepts
@@ -112,20 +259,20 @@ def regenerate_concepts():
     """Regenerate creative concepts based on user feedback"""
     data = request.json
     feedback = data.get('feedback', '')
-    
+
     state = session.get('workflow_state', {})
-    
+
     # Add feedback to state
     state['br_feedback_result'] = feedback
-    
+
     # Re-run creative director with feedback
     result = creative_director_node(state)
     state.update(result)
-    
+
     # Parse the creative concepts
     concepts_text = state['creative_director_node']
     concepts = concepts_text.split('§')
-    
+
     structured_concepts = []
     for i, concept in enumerate(concepts):
         if concept.strip():
@@ -133,9 +280,14 @@ def regenerate_concepts():
                 'id': i + 1,
                 'content': concept.strip()
             })
-    
+
+    # Persist and clear selection on regeneration
+    state['structured_concepts'] = structured_concepts
+    state['selected_concept_id'] = None
+    state['selected_concept'] = None
+
     session['workflow_state'] = state
-    
+
     return jsonify({
         'status': 'success',
         'concepts': structured_concepts
@@ -147,12 +299,23 @@ def select_concept():
     """User selects a concept"""
     data = request.json
     concept_id = data.get('concept_id')
-    
+    content = data.get('content')
+
     state = session.get('workflow_state', {})
+    # Save selection
+    state['selected_concept_id'] = concept_id
+    if content:
+        state['selected_concept'] = content
+    else:
+        for c in state.get('structured_concepts', []):
+            if c.get('id') == concept_id:
+                state['selected_concept'] = c.get('content')
+                break
+    # Mark user approval for next step
     state['user_happy'] = True
-    
+
     session['workflow_state'] = state
-    
+
     return jsonify({'status': 'success'})
 
 
@@ -160,13 +323,13 @@ def select_concept():
 def generate_script():
     """Generate the video script"""
     state = session.get('workflow_state', {})
-    
-    # Run script creation
+
+    # Run script creation (uses selected_concept from state)
     result = creation_of_scripts_node(state)
     state.update(result)
-    
+
     session['workflow_state'] = state
-    
+
     return jsonify({
         'status': 'success',
         'script': state['scripts_created']
@@ -178,12 +341,12 @@ def update_script():
     """Update the script with user edits"""
     data = request.json
     updated_script = data.get('script')
-    
+
     state = session.get('workflow_state', {})
     state['scripts_created'] = updated_script
-    
+
     session['workflow_state'] = state
-    
+
     return jsonify({'status': 'success'})
 
 
@@ -191,21 +354,21 @@ def update_script():
 def generate_storyboard():
     """Generate storyboard frames"""
     state = session.get('workflow_state', {})
-    
+
     # Run global themes generation
     result = generate_global_themes_node(state)
     state.update(result)
-    
+
     # Run frame prompts generation
     result = generate_frame_prompts_node(state)
     state.update(result)
-    
+
     session['workflow_state'] = state
-    
+
     # Combine script scenes with frame prompts
     scenes = state['scripts_created'].get('script', [])
     prompts = state['frame_prompts']
-    
+
     storyboard = []
     for i, scene in enumerate(scenes):
         storyboard.append({
@@ -217,7 +380,7 @@ def generate_storyboard():
             'audio_cue': scene.get('audio_cue'),
             'image_prompt': prompts[i] if i < len(prompts) else ''
         })
-    
+
     return jsonify({
         'status': 'success',
         'storyboard': storyboard

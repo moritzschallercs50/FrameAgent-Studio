@@ -77,7 +77,8 @@ def chat_with_openrouter(prompt: str, extra_prompt=None, image_paths: Optional[L
         }
     ]
 
-    print("Sending request to Grok-4-fast...")
+    if os.getenv('DEBUG_LLM') == '1':
+        print("Sending request to Grok-4-fast...")
     try:
         # 5. Send the request
         completion = client.chat.completions.create(
@@ -126,7 +127,8 @@ def generate_image_with_style(prompt: str, style: str = "TSB Advert") -> Optiona
         }
     ]
 
-    print("Sending image generation request to google/gemini-2.5-flash-image...")
+    if os.getenv('DEBUG_LLM') == '1':
+        print("Sending image generation request to google/gemini-2.5-flash-image...")
     # 4. Send the request
     completion = client.chat.completions.create(
         model="google/gemini-2.5-flash-image",
@@ -136,13 +138,15 @@ def generate_image_with_style(prompt: str, style: str = "TSB Advert") -> Optiona
 
     # 5. Extract the image content from the response
     message = completion.choices[0].message
-    print(message)
+    if os.getenv('DEBUG_LLM') == '1':
+        print(message)
 
     # The 'message' object has a 'content' attribute which is a LIST
     # We want the first item in that list
     content_part = message.content[0]
 
-    print(content_part)
+    if os.getenv('DEBUG_LLM') == '1':
+        print(content_part)
 
 
 

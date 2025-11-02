@@ -1,5 +1,5 @@
 # Generated Global Themes and Figures
 
-**Global Theme:** A young developer's journey from ethical frustration in a cluttered San Francisco co-working space at dusk to hopeful success with safe AI integration, culminating in uplifting city skyline visuals.
+**Global Theme:** A visual journey from frustration with unreliable AI in a crowded co-working space to triumphant success and clarity using safe, interpretable Claude AI
 
-**Global Figures:** Young female developer Alex (28, glasses, messy hair); Mentor Dr. Elena (45, lab coat, warm smile); Diverse animated patient avatars
+**Global Figures:** Mia Chen, a 28-year-old woman in hoodie and ponytail; Dr. Elias Grant, a 52-year-old man in button-down with Anthropic pin

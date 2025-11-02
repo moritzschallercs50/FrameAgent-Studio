@@ -1,4 +1,5 @@
 import json
+import os
 from llm_library import chat_with_openrouter
 from langgraph.graph import StateGraph, END
 from typing import TypedDict, Any, List
@@ -87,6 +88,16 @@ def user_feedback_loop_node(state: GraphState):
 
 
 def creation_of_scripts_node(state):
+    selected_concept = state.get('selected_concept') or ''
+    # If not explicitly set, fallback to the first idea from creative_director output
+    if not selected_concept:
+        cd_text = state.get('creative_director_node', '')
+        if isinstance(cd_text, str) and '§' in cd_text:
+            try:
+                selected_concept = cd_text.split('§')[0].strip()
+            except Exception:
+                selected_concept = cd_text
+
     system_prompt = (f"""You are the Script Writer AI Agent. Your job is to take the approved creative concept and write a 30-second video script.
 
     You must output ONLY a valid JSON object and nothing else.
@@ -105,22 +116,29 @@ def creation_of_scripts_node(state):
     - "audio_cue": (String) Describe the music, mood, or important sound effects (e.g., "Uplifting music begins").
 
     Your goal is to write a JSON script that is ready for a video producer or AI video generator. Be concise but vivid.
-    Here is the final creative concept and brand information: {state}""")
+    Here is the selected creative concept (use ONLY this as the narrative basis):
+    {selected_concept}
+
+    Here is supplemental brand and context information (for tone and framing only):
+    {state}""")
 
     script_json_string = chat_with_openrouter(system_prompt)
     try:
         parsed_script = json.loads(script_json_string)
-        print("Successfully parsed script JSON.")
+        if os.getenv('DEBUG_LLM') == '1':
+            print("Successfully parsed script JSON.")
         return {"scripts_created": parsed_script}
     except json.JSONDecodeError as e:
-        print(f"Error: Failed to decode script JSON. {e}")
-        print(f"Received string: {script_json_string}")
+        if os.getenv('DEBUG_LLM') == '1':
+            print(f"Error: Failed to decode script JSON. {e}")
+            print(f"Received string: {script_json_string}")
         return {"scripts_created": {"script": []}}
 
 
 # REFACTORED NODE
 def generate_global_themes_node(state: GraphState):
-    print("Generating global themes and figures for the entire script...")
+    if os.getenv('DEBUG_LLM') == '1':
+        print("Generating global themes and figures for the entire script...")
     scenes = state["scripts_created"].get("script", [])
 
     if not scenes:
@@ -140,7 +158,8 @@ def generate_global_themes_node(state: GraphState):
 
     all_scenes_json_string = json.dumps(scenes, indent=2)
 
-    print("Analyzing all scenes in a single batch...")
+    if os.getenv('DEBUG_LLM') == '1':
+        print("Analyzing all scenes in a single batch...")
     themes_json_string = chat_with_openrouter(
         theme_generation_system_prompt,
         all_scenes_json_string
@@ -155,23 +174,27 @@ def generate_global_themes_node(state: GraphState):
             raise json.JSONDecodeError("Expected a JSON object, not a list.", themes_json_string, 0)
 
         generated_data = parsed_data
-        print("Successfully parsed global themes and figures:")
-        print(f"  - Global Theme: {generated_data.get('global_theme')}")
-        print(f"  - Global Figures: {generated_data.get('global_figures')}")
+        if os.getenv('DEBUG_LLM') == '1':
+            print("Successfully parsed global themes and figures:")
+            print(f"  - Global Theme: {generated_data.get('global_theme')}")
+            print(f"  - Global Figures: {generated_data.get('global_figures')}")
 
     except json.JSONDecodeError as e:
-        print(f"Error: Failed to decode global themes JSON object. {e}")
-        print(f"Received string: {themes_json_string}")
+        if os.getenv('DEBUG_LLM') == '1':
+            print(f"Error: Failed to decode global themes JSON object. {e}")
+            print(f"Received string: {themes_json_string}")
         # Provide a fallback *object*
         generated_data = {"global_theme": "generic theme", "global_figures": "generic figure"}
-        print("Using fallback data.")
+        if os.getenv('DEBUG_LLM') == '1':
+            print("Using fallback data.")
 
     return {"global_themes_and_figures": generated_data}
 
 
 # REFACTORED NODE
 def generate_frame_prompts_node(state: GraphState):
-    print("Generating starting frame prompts for each scene...")
+    if os.getenv('DEBUG_LLM') == '1':
+        print("Generating starting frame prompts for each scene...")
     scenes = state["scripts_created"].get("script", [])
     # Get the single global themes dictionary
     global_data = state.get("global_themes_and_figures", {})
@@ -220,7 +243,8 @@ def generate_frame_prompts_node(state: GraphState):
         cleaned_prompt = image_prompt.strip().strip('"')
 
         generated_prompts.append(cleaned_prompt)
-        print(f"  - Prompt for Scene {scene.get('scene_number')}: {cleaned_prompt}")
+        if os.getenv('DEBUG_LLM') == '1':
+            print(f"  - Prompt for Scene {scene.get('scene_number')}: {cleaned_prompt}")
 
     return {"frame_prompts": generated_prompts}
 
@@ -239,104 +263,89 @@ def check_user_happiness(state: GraphState):
         return "creative_director"
 
 
-# 2. Use StateGraph and pass the state definition
-workflow = StateGraph(GraphState)
+if __name__ == "__main__":
+    # Build and run the offline workflow only when executing this file directly
+    workflow = StateGraph(GraphState)
 
-# Add nodes
-workflow.add_node("research_agent", research_agent_node)
-workflow.add_node("brand_strategist", brand_strategist_node)
-workflow.add_node("user_feedback_yes_no", user_feedback_yes_no_node)
-workflow.add_node("creative_director", creative_director_node)
-workflow.add_node("br_feedback", br_feedback_node)
-workflow.add_node("user_feedback_loop", user_feedback_loop_node)
-workflow.add_node("creation_of_scripts", creation_of_scripts_node)
-# Use the new node name
-workflow.add_node("generate_global_themes", generate_global_themes_node)
-workflow.add_node("generate_frame_prompts", generate_frame_prompts_node)
+    # Add nodes
+    workflow.add_node("research_agent", research_agent_node)
+    workflow.add_node("brand_strategist", brand_strategist_node)
+    workflow.add_node("user_feedback_yes_no", user_feedback_yes_no_node)
+    workflow.add_node("creative_director", creative_director_node)
+    workflow.add_node("br_feedback", br_feedback_node)
+    workflow.add_node("user_feedback_loop", user_feedback_loop_node)
+    workflow.add_node("creation_of_scripts", creation_of_scripts_node)
+    workflow.add_node("generate_global_themes", generate_global_themes_node)
+    workflow.add_node("generate_frame_prompts", generate_frame_prompts_node)
 
-# Set entry point
-workflow.set_entry_point("research_agent")
+    # Entry and edges
+    workflow.set_entry_point("research_agent")
+    workflow.add_edge("research_agent", "brand_strategist")
+    workflow.add_edge("brand_strategist", "user_feedback_yes_no")
+    workflow.add_edge("creative_director", "br_feedback")
+    workflow.add_edge("br_feedback", "user_feedback_loop")
 
-# Add edges
-workflow.add_edge("research_agent", "brand_strategist")
-workflow.add_edge("brand_strategist", "user_feedback_yes_no")
-workflow.add_edge("creative_director", "br_feedback")
-workflow.add_edge("br_feedback", "user_feedback_loop")
+    workflow.add_conditional_edges(
+        "user_feedback_yes_no",
+        check_user_decision,
+        {"creative_director": "creative_director", "brand_strategist": "brand_strategist"}
+    )
+    workflow.add_conditional_edges(
+        "user_feedback_loop",
+        check_user_happiness,
+        {"creation_of_scripts": "creation_of_scripts", "creative_director": "creative_director"}
+    )
 
-# Add conditional edges
-workflow.add_conditional_edges(
-    "user_feedback_yes_no",
-    check_user_decision,
-    {"creative_director": "creative_director", "brand_strategist": "brand_strategist"}
-)
-workflow.add_conditional_edges(
-    "user_feedback_loop",
-    check_user_happiness,
-    {"creation_of_scripts": "creation_of_scripts", "creative_director": "creative_director"}
-)
+    workflow.add_edge("creation_of_scripts", "generate_global_themes")
+    workflow.add_edge("generate_global_themes", "generate_frame_prompts")
+    workflow.add_edge("generate_frame_prompts", END)
 
-# 3. Set the finish point using END
-# Update graph flow
-workflow.add_edge("creation_of_scripts", "generate_global_themes")
-workflow.add_edge("generate_global_themes", "generate_frame_prompts")
-workflow.add_edge("generate_frame_prompts", END)  # End after prompts are generated
+    compiled = workflow.compile()
 
-# Compile the graph
-app = workflow.compile()
+    final_state = compiled.invoke({})
+    try:
+        print("\nSaving outputs to files...")
 
-final_state = app.invoke({})
-try:
-    print("\nSaving outputs to files...")
+        with open("brand_strategy.md", "w", encoding="utf-8") as f:
+            f.write(final_state.get('summary_plan_audience', 'No content generated.'))
 
-    # 1. Save Brand Strategist output
-    with open("brand_strategy.md", "w", encoding="utf-8") as f:
-        f.write(final_state.get('summary_plan_audience', 'No content generated.'))
+        with open("creative_concept.md", "w", encoding="utf-8") as f:
+            f.write(final_state.get('creative_director_node', 'No content generated.'))
 
-    # 2. Save Creative Director output
-    with open("creative_concept.md", "w", encoding="utf-8") as f:
-        f.write(final_state.get('creative_director_node', 'No content generated.'))
+        with open("final_script.json", "w", encoding="utf-8") as f:
+            script_data = final_state.get('scripts_created', {})
+            json.dump(script_data, f, indent=4)
 
-    # 3. Save Final Script output (as JSON)
-    with open("final_script.json", "w", encoding="utf-8") as f:
-        script_data = final_state.get('scripts_created', {})
-        json.dump(script_data, f, indent=4)
+        with open("global_themes_and_figures.md", "w", encoding="utf-8") as f:
+            themes = final_state.get('global_themes_and_figures', {})
+            f.write("# Generated Global Themes and Figures\n\n")
+            if not themes:
+                f.write("No global themes or figures were generated.")
+            else:
+                f.write(f"**Global Theme:** {themes.get('global_theme', 'N/A')}\n\n")
+                f.write(f"**Global Figures:** {themes.get('global_figures', 'N/A')}\n")
 
-    # 4. Save Generated Global Themes & Figures (REFACTORED)
-    with open("global_themes_and_figures.md", "w", encoding="utf-8") as f:
-        # Get the single dictionary
-        themes = final_state.get('global_themes_and_figures', {})
-        f.write("# Generated Global Themes and Figures\n\n")
-        if not themes:
-            f.write("No global themes or figures were generated.")
-        else:
-            # Write the keys directly, no loop
-            f.write(f"**Global Theme:** {themes.get('global_theme', 'N/A')}\n\n")
-            f.write(f"**Global Figures:** {themes.get('global_figures', 'N/A')}\n")
+        with open("frame_prompts.md", "w", encoding="utf-8") as f:
+            prompts = final_state.get('frame_prompts', [])
+            f.write("# Generated Frame Prompts (Combined with Globals)\n\n")
+            if not prompts:
+                f.write("No prompts were generated.")
+            for i, prompt in enumerate(prompts, 1):
+                f.write(f"## Scene {i}\n")
+                f.write(f"{prompt}\n\n")
 
-    # 5. Save Generated Frame Prompts
-    with open("frame_prompts.md", "w", encoding="utf-8") as f:
-        prompts = final_state.get('frame_prompts', [])
-        f.write("# Generated Frame Prompts (Combined with Globals)\n\n")
-        if not prompts:
-            f.write("No prompts were generated.")
-        for i, prompt in enumerate(prompts, 1):
-            f.write(f"## Scene {i}\n")
-            f.write(f"{prompt}\n\n")
+        print("Successfully saved 5 files.")
 
-    print("Successfully saved 5 files.")
+    except KeyError as e:
+        print(f"\nError: A key was missing from the final state: {e}")
+    except IOError as e:
+        print(f"\nError writing files to disk: {e}")
 
-except KeyError as e:
-    print(f"\nError: A key was missing from the final state: {e}")
-except IOError as e:
-    print(f"\nError writing files to disk: {e}")
-
-
-
-try:
-    img = app.get_graph().draw_mermaid_png()
-    with open("workflow_graph.png", "wb") as f:
-        f.write(img)
-    print("\nGraph visualization saved to workflow_graph.png")
-except Exception as e:
-    print(f"\nCould not create visualization: {e}")
-    print("Install 'pygraphviz' or 'matplotlib' for visualization.")
+    try:
+        img = compiled.get_graph().draw_mermaid_png()
+        with open("workflow_graph.png", "wb") as f:
+            f.write(img)
+        print("\nGraph visualization saved to workflow_graph.png")
+    except Exception as e:
+        print(f"\nCould not create visualization: {e}")
+        print("Install 'pygraphviz' or 'matplotlib' for visualization.")

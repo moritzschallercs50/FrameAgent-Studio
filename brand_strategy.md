@@ -1,5 +1,3 @@
-1. **Brand Core**: Pioneering safe, interpretable AI that prioritizes ethical development and human-aligned intelligence.
-
-2. **Brand Positioning (Key Differentiator)**: Leading with Constitutional AI frameworks for harmless, steerable systems that outpace competitors in safety and reliability.
-
-3. **Brand Positioning (Target Audience)**: Developers, enterprises, and policymakers seeking responsible AI integration for innovative, low-risk applications.
+1. Brand Core: Pioneering safe, reliable, and interpretable AI systems through interdisciplinary research and innovation.  
+2. Brand Positioning (Key Differentiator): Emphasizing AI safety with frameworks like Constitutional AI, ensuring harmless and steerable technology unlike competitors focused solely on performance.  
+3. Brand Positioning (Target Audience): Developers, businesses, and organizations seeking ethical, integrable AI solutions for responsible innovation.

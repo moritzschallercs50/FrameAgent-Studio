@@ -1,76 +1,244 @@
-{% extends "base.html" %}
-
-{% block title %}FrameAgent Studio - Start{% endblock %}
-
-{% block content %}
-<div class="page page-1">
-    <div class="center-content">
-        <div class="hero-section">
-            <h1 class="main-title">FrameAgent Studio</h1>
-            <p class="subtitle">AI-Powered Brand Video Generation</p>
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Brand Video Studio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}" />
+  </head>
+  <body>
+    <div id="app">
+      <header class="top-bar">
+        <div class="brand-mark">AI Brand Studio</div>
+        <div class="progress-indicator">
+          <div class="progress-dot active" data-step="0">1</div>
+          <div class="progress-dot" data-step="1">2</div>
+          <div class="progress-dot" data-step="2">3</div>
+          <div class="progress-dot" data-step="3">4</div>
+          <div class="progress-dot" data-step="4">5</div>
+          <div class="progress-dot" data-step="5">6</div>
         </div>
-        
-        <div class="url-input-container">
-            <input 
-                type="text" 
-                id="website-url" 
-                class="url-input" 
-                placeholder="Enter your website's URL"
-                autocomplete="url"
-            >
-            <button id="analyze-btn" class="primary-btn">
-                <span>Analyze</span>
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                    <path d="M7 10L10 13L13 10M10 3V13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                    <path d="M3 15L3 16C3 16.5523 3.44772 17 4 17L16 17C16.5523 17 17 16.5523 17 16V15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                </svg>
-            </button>
-        </div>
+      </header>
+      <main class="slider" id="slider">
+        <section class="page" data-page="0">
+          <div class="page-content intro">
+            <h1>Generate Brand Videos with AI Agents</h1>
+            <p>
+              Enter your website URL and let our team of AI specialists craft a
+              full brand video experience.
+            </p>
+            <div class="input-row">
+              <input
+                type="url"
+                id="websiteInput"
+                placeholder="Enter your website’s URL"
+              />
+              <button id="startBtn">Start</button>
+            </div>
+            <small class="hint">Example: https://www.example.com</small>
+          </div>
+        </section>
+
+        <section class="page" data-page="1">
+          <div class="page-content strategist">
+            <div class="page-header">
+              <h2>Brand Strategist</h2>
+              <p>Conducting a brand audit and defining your strategic core.</p>
+            </div>
+            <div class="cards-grid strategist-grid">
+              <div class="card">
+                <h3>Brand Core</h3>
+                <div class="card-section">
+                  <h4>Mission</h4>
+                  <p id="brandMission">Develop frontier AI that is reliable, interpretable and steerable.</p>
+                </div>
+                <div class="card-section">
+                  <h4>Values</h4>
+                  <ul id="brandValues"></ul>
+                </div>
+                <div class="card-section">
+                  <h4>Product</h4>
+                  <p id="brandProduct">Claude — a family of large language models for enterprise and developer use.</p>
+                </div>
+              </div>
+
+              <div class="card">
+                <h3>Brand Position</h3>
+                <div class="card-section">
+                  <h4>Target Audience</h4>
+                  <p id="targetAudience">Developers and enterprises seeking safe, controllable advanced AI tools.</p>
+                </div>
+                <div class="card-section">
+                  <h4>Points of Difference</h4>
+                  <ul id="pointsDifference"></ul>
+                </div>
+                <div class="card-section">
+                  <h4>Brand Promise</h4>
+                  <p id="brandPromise">AI you can rely on — human-centered intelligence built for transparency and trust.</p>
+                </div>
+              </div>
+
+              <div class="card">
+                <h3>Brand Identity</h3>
+                <div class="identity-grid">
+                  <div>
+                    <h4>Name</h4>
+                    <p id="brandName">Anthropic</p>
+                  </div>
+                  <div>
+                    <h4>Logo</h4>
+                    <div class="logo-placeholder" id="brandLogo">Logo</div>
+                  </div>
+                  <div>
+                    <h4>Typography</h4>
+                    <p id="brandTypography">Inter</p>
+                  </div>
+                  <div>
+                    <h4>Color Palette</h4>
+                    <div class="color-palette" id="colorPalette"></div>
+                  </div>
+                  <div>
+                    <h4>Tone</h4>
+                    <p id="brandTone">Thoughtful, collaborative, empowering</p>
+                  </div>
+                  <div>
+                    <h4>Tagline</h4>
+                    <p id="brandTagline">Keep Thinking.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="nav-buttons">
+              <button class="secondary" data-nav="prev">Back</button>
+              <button class="primary" data-nav="next">Next</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="page" data-page="2">
+          <div class="page-content creative">
+            <div class="page-header">
+              <h2>Creative Director</h2>
+              <p>Select a concept or regenerate ideas with feedback.</p>
+            </div>
+            <div class="ideas-grid" id="ideasGrid"></div>
+            <div class="creative-actions">
+              <button class="secondary" data-nav="prev">Back</button>
+              <button class="accent" id="regenerateIdeasBtn">Regenerate Ideas</button>
+              <button class="primary" data-nav="next">Next</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="page" data-page="3">
+          <div class="page-content screenwriter">
+            <div class="page-header">
+              <h2>Screenwriter</h2>
+              <p>Edit the draft script before moving to storyboard.</p>
+            </div>
+            <div id="scriptView" class="script-view"></div>
+            <div class="nav-buttons">
+              <button class="secondary" data-nav="prev">Back</button>
+              <button class="primary" data-nav="next">Next</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="page" data-page="4">
+          <div class="page-content storyboard">
+            <div class="page-header">
+              <h2>Storyboard</h2>
+              <p>Review each shot laid out across the timeline.</p>
+            </div>
+            <div class="storyboard-grid" id="storyboardGrid"></div>
+            <div class="nav-buttons">
+              <button class="secondary" data-nav="prev">Back</button>
+              <button class="primary" data-nav="next">Next</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="page" data-page="5">
+          <div class="page-content video">
+            <div class="page-header">
+              <h2>Final Video</h2>
+              <p>Preview the video generated by the production agent.</p>
+            </div>
+            <div class="video-wrapper">
+              <video controls poster="https://images.unsplash.com/photo-1525182008055-f88b95ff7980?auto=format&fit=crop&w=900&q=80">
+                <source src="https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4" type="video/mp4" />
+                Your browser does not support the video tag.
+              </video>
+            </div>
+            <div class="nav-buttons">
+              <button class="secondary" data-nav="prev">Back</button>
+              <button class="primary" id="restartBtn">Start Over</button>
+            </div>
+          </div>
+        </section>
+      </main>
     </div>
-</div>
-{% endblock %}
 
-{% block extra_js %}
-<script>
-document.getElementById('analyze-btn').addEventListener('click', function() {
-    const url = document.getElementById('website-url').value.trim();
-    
-    if (!url) {
-        alert('Please enter a website URL');
-        return;
-    }
-    
-    // Show loading
-    showLoading('Analyzing your brand...', 'Our research agent is exploring your website');
-    
-    fetch('/api/analyze-url', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ url: url })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.status === 'success') {
-            setTimeout(() => {
-                window.location.href = '/brand-strategy';
-            }, 1500);
-        }
-    })
-    .catch(error => {
-        hideLoading();
-        console.error('Error:', error);
-        alert('An error occurred. Please try again.');
-    });
-});
+    <div class="loading-overlay" id="loadingOverlay" aria-hidden="true">
+      <div class="loading-card">
+        <div class="spinner"></div>
+        <p id="loadingMessage">Preparing next agent...</p>
+      </div>
+    </div>
 
-// Allow Enter key to submit
-document.getElementById('website-url').addEventListener('keypress', function(e) {
-    if (e.key === 'Enter') {
-        document.getElementById('analyze-btn').click();
-    }
-});
-</script>
-{% endblock %}
+    <div class="modal" id="ideaModal" aria-hidden="true">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Edit Concept</h3>
+          <button class="icon-btn" id="closeIdeaModal" aria-label="Close">×</button>
+        </div>
+        <form id="ideaForm">
+          <label>
+            Storyline
+            <textarea id="modalStoryline" required></textarea>
+          </label>
+          <label>
+            Characters
+            <textarea id="modalCharacters" required></textarea>
+          </label>
+          <label>
+            Location
+            <textarea id="modalLocation" required></textarea>
+          </label>
+          <div class="modal-actions">
+            <button type="button" class="secondary" id="cancelIdeaEdit">Cancel</button>
+            <button type="submit" class="primary">Save</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="modal" id="regenerateModal" aria-hidden="true">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Regenerate Concepts</h3>
+          <button class="icon-btn" id="closeRegenerateModal" aria-label="Close">×</button>
+        </div>
+        <form id="regenerateForm">
+          <label>
+            What feedback should the agents consider?
+            <textarea id="feedbackInput" placeholder="e.g. Focus on collaboration, highlight enterprise security"></textarea>
+          </label>
+          <div class="modal-actions">
+            <button type="button" class="secondary" id="cancelRegenerate">Cancel</button>
+            <button type="submit" class="primary">Regenerate</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  </body>
+</html>
 
