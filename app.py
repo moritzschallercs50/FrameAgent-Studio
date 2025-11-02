@@ -387,6 +387,26 @@ def generate_storyboard():
     state = session.get('workflow_state', {})
 
     # Run global themes generation
+    # Normalize scripts_created to ensure we have scenes
+    raw_script = state.get('scripts_created', {})
+    scenes = []
+    try:
+        if isinstance(raw_script, str):
+            raw_script = json.loads(raw_script)
+        if isinstance(raw_script, dict):
+            if isinstance(raw_script.get('script'), list):
+                scenes = raw_script.get('script')
+            elif isinstance(raw_script.get('scenes'), list):
+                scenes = raw_script.get('scenes')
+        elif isinstance(raw_script, list):
+            scenes = raw_script
+    except Exception:
+        scenes = []
+
+    # If normalization found scenes, place back into state consistently
+    if scenes:
+        state['scripts_created'] = {'script': scenes}
+
     result = generate_global_themes_node(state)
     state.update(result)
 
@@ -397,7 +417,7 @@ def generate_storyboard():
     session['workflow_state'] = state
 
     # Combine script scenes with frame prompts
-    scenes = state['scripts_created'].get('script', [])
+    scenes = state.get('scripts_created', {}).get('script', [])
     prompts = state['frame_prompts']
 
     storyboard = []

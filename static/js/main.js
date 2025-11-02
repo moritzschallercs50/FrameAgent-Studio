@@ -22,12 +22,12 @@ const scriptView = document.getElementById('scriptView');
 const storyboardGrid = document.getElementById('storyboardGrid');
 
 const loadingSteps = [
-  'Conducting brand discovery…',
-  'Brand strategist compiling insights…',
-  'Creative director brainstorming concepts…',
-  'Screenwriter drafting the narrative…',
-  'Storyboard artist sketching frames…',
-  'Video generator producing the final cut…',
+  'Preparing next step…',
+  'Clara (Brand Strategist) is working…',
+  'Ava (Creative Director) is brainstorming concepts…',
+  'Theo (Screenwriter) is drafting the narrative…',
+  'Arlo (Storyboard Artist) is sketching frames…',
+  'Kai (Video Generator) is producing the final cut…',
 ];
 
 // Demo fallback images for hackathon (place files at /static/demo/storyboard/1.jpg ... 6.jpg)
