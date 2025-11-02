@@ -617,6 +617,14 @@ navButtons.forEach((btn) => {
   btn.addEventListener('click', () => handleNavigation(btn.dataset.nav));
 });
 
+const homeLink = document.getElementById('homeLink');
+if (homeLink) {
+  homeLink.addEventListener('click', (e) => {
+    e.preventDefault();
+    navigateTo(0);
+  });
+}
+
 startBtn.addEventListener('click', async () => {
   const url = websiteInput.value.trim();
   if (!url) {
