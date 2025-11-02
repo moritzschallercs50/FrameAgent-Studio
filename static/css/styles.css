@@ -404,7 +404,7 @@ button.accent:hover {
 
 .shot-media {
   width: 100%;
-  aspect-ratio: 16 / 9;
+  aspect-ratio: 3 / 4; /* portrait */
   position: relative;
 }
 

@@ -560,8 +560,32 @@ async function preNextFlow(pageIndex) {
         await apiPost('/api/update-script', { script: appState.script });
       }
       const res = await apiPost('/api/generate-storyboard', {});
-      appState.storyboard = res.storyboard || [];
+      let board = res && Array.isArray(res.storyboard) ? res.storyboard : [];
+      if (!board.length) {
+        board = new Array(6).fill(null).map((_, i) => ({
+          scene_number: i + 1,
+          timestamp: '',
+          setting: '',
+          visual_description: '',
+          text_on_screen: '',
+          audio_cue: '',
+          image_prompt: '',
+          image_url: DEMO_STORYBOARD_IMAGES[i] || ''
+        }));
+      }
+      appState.storyboard = board;
       renderStoryboardFromState();
+      return;
+    }
+    case 4: {
+      // Load demo video URL from backend and set it on the player
+      const res = await apiPost('/api/generate-video', {});
+      const videoUrl = res && res.video_url;
+      const video = document.getElementById('finalVideo');
+      if (video && videoUrl) {
+        video.setAttribute('src', videoUrl);
+        try { video.load(); } catch (e) {}
+      }
       return;
     }
     default:

@@ -449,11 +449,26 @@ def generate_storyboard():
 @app.route('/api/generate-video', methods=['POST'])
 def generate_video():
     """Generate the final video (placeholder for now)"""
-    # This would integrate with a video generation service
-    return jsonify({
-        'status': 'success',
-        'video_url': '/static/sample-video.mp4'  # Placeholder
-    })
+    # Hardcoded demo: pick first video in static/demo/final_video
+    demo_dir = os.path.join('static', 'demo', 'final_video')
+    video_url = '/static/sample-video.mp4'
+    try:
+        if os.path.isdir(demo_dir):
+            exts = {'.mp4', '.webm', '.mov', '.m4v'}
+            entries = [n for n in sorted(os.listdir(demo_dir)) if os.path.isfile(os.path.join(demo_dir, n))]
+            # Prefer known video extensions first
+            for name in entries:
+                _, ext = os.path.splitext(name)
+                if ext.lower() in exts:
+                    video_url = f"/static/demo/final_video/{name}"
+                    break
+            else:
+                # If no known extensions matched, just take the first file present
+                if entries:
+                    video_url = f"/static/demo/final_video/{entries[0]}"
+    except Exception:
+        pass
+    return jsonify({'status': 'success', 'video_url': video_url})
 
 
 @app.route('/brand-strategy')
