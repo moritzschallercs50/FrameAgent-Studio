@@ -324,7 +324,6 @@ async function loadAndRenderBrandStrategy() {
     const missionEl = document.getElementById('brandMission');
     const diffList = document.getElementById('pointsDifference');
     const audienceEl = document.getElementById('targetAudience');
-    const promiseEl = document.getElementById('brandPromise');
 
     if (missionEl && core) missionEl.textContent = core;
     if (audienceEl && audience) audienceEl.textContent = audience;
@@ -335,11 +334,7 @@ async function loadAndRenderBrandStrategy() {
       diffList.appendChild(li);
     }
 
-    // Brand promise: prefer tagline, else differentiator, else core
-    if (promiseEl && !promiseEl.textContent.trim()) {
-      const bp = appState.brand.tagline || diff || core;
-      if (bp) promiseEl.textContent = bp;
-    }
+    // No brand promise displayed
 
     // If no values yet, derive naive values from core sentence
     if ((appState.brand.values || []).length === 0 && core) {
